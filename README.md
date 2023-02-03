@@ -15,13 +15,13 @@ pip install -r requirements.txt
 
 ## Datasets
 
-Download the datasets from the following:
+Download the dataset from the following repository:
 
 ```
 https://github.com/lupantech/ScienceQA/tree/main/data
 ```
 
-Download the extracted vision fearures from [Anonymous](xxx) and unzip the files under `vision_features`
+Download the extracted vision features from [vision_features](https://drive.google.com/file/d/13B0hc_F_45-UlqPLKSgRz-ALtFQ8kIJr/view?usp=share_link) and unzip the files under `vision_features`
 
 ## Instructions
 
@@ -47,7 +47,7 @@ CUDA_VISIBLE_DEVICES=0,1 python main.py \
 
 ### Inference 
 
-Our trained models are available at [Anonymous](xxx). To use our trained models, please put the them under the ```models``` folder.
+Our trained models are available at [models](https://drive.google.com/file/d/1FtTYOJPHnWnFfCxNC6M3gar4RAX5E21b/view?usp=share_link). To use our trained models, please put the them under the ```models``` folder.
 
 ```
 # rationale generation
@@ -56,7 +56,7 @@ CUDA_VISIBLE_DEVICES=0,1 python main.py \
     --user_msg rationale --img_type detr \
     --bs 8 --eval_bs 4 --eval_acc 10 --output_len 512 \
     --final_eval --prompt_format QCM-LE \
-    --evaluate_dir models/rationale
+    --evaluate_dir models/MM-CoT-UnifiedQA-base-Rationale
 
 # answer inference
 CUDA_VISIBLE_DEVICES=0,1 python main.py \
@@ -66,7 +66,18 @@ CUDA_VISIBLE_DEVICES=0,1 python main.py \
     --final_eval --prompt_format QCMG-A \
     --eval_le models/rationale/predictions_ans_eval.json \
     --test_le models/rationale/predictions_ans_test.json \
-    --evaluate_dir models/answer
+    --evaluate_dir models/MM-CoT-UnifiedQA-base-Answer
+```
+
+## Citing MM-CoT
+
+```
+@article{zhang2023multicot,
+  title={Multimodal Chain-of-Thought Reasoning in Language Models},
+  author={Zhang, Zhuosheng and Zhang, Aston and Li, Mu and Zhao, Hai and Karypis, George and Smola, Alex},
+  journal={arXiv preprint arXiv:2302.00923},
+  year={2023}
+}
 ```
 
 ## License
