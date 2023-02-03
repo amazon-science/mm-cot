@@ -1,5 +1,7 @@
 # Multimodal Chain-of-Thought Reasoning in Language Models
 
+<h5 align="center"><i>"Imagine learning a textbook without figures or tables."</i></h5>
+
 Multimodal-CoT incorporates vision features in a decoupled training framework. The framework consists of two training stages: (i) rationale generation and (ii) answer inference. Both stages share the same model architecture but differ in the input and output.
 
 ![](vision_features/mm-cot.png)
