@@ -21,7 +21,7 @@ Download the dataset from the following repository:
 https://github.com/lupantech/ScienceQA/tree/main/data
 ```
 
-Download the extracted vision features from [Anonymous](xxx) and unzip the files under `vision_features`
+Download the extracted vision features from [vision_features](https://drive.google.com/file/d/13B0hc_F_45-UlqPLKSgRz-ALtFQ8kIJr/view?usp=share_link) and unzip the files under `vision_features`
 
 ## Instructions
 
@@ -47,7 +47,7 @@ CUDA_VISIBLE_DEVICES=0,1 python main.py \
 
 ### Inference 
 
-Our trained models are available at [Anonymous](xxx). To use our trained models, please put the them under the ```models``` folder.
+Our trained models are available at [models](https://drive.google.com/file/d/1FtTYOJPHnWnFfCxNC6M3gar4RAX5E21b/view?usp=share_link). To use our trained models, please put the them under the ```models``` folder.
 
 ```
 # rationale generation
