@@ -76,3 +76,5 @@ This project is licensed under the Apache-2.0 License.
 ## Acknowledgement
 
 Part of our codes are adapted from [ScienceQA](https://github.com/lupantech/ScienceQA) and [Transformers](https://github.com/huggingface/transformers).
+
+We thank Pan Lu for providing parameter size for ScienceQA baselines.
