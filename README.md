@@ -69,6 +69,17 @@ CUDA_VISIBLE_DEVICES=0,1 python main.py \
     --evaluate_dir models/MM-CoT-UnifiedQA-base-Answer
 ```
 
+## Citing MM-CoT
+
+```
+@article{zhang2023multicot,
+  title={Multimodal Chain-of-Thought Reasoning in Language Models},
+  author={Zhang, Zhuosheng and Zhang, Aston and Li, Mu and Zhao, Hai and Karypis, George and Smola, Alex},
+  journal={arXiv preprint arXiv:2302.00923},
+  year={2023}
+}
+```
+
 ## License
 
 This project is licensed under the Apache-2.0 License.
