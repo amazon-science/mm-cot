@@ -1,12 +1,11 @@
-huggingface-hub==0.0.12
-nltk==3.5
+huggingface-hub>=0.4.0
+nltk>=3.5
 numpy==1.23.2
 openai==0.23.0
 pandas==1.4.3
 rouge==1.0.1
 sentence-transformers==2.2.2
 transformers==4.21.1
-nltk==3.8
 evaluate==0.4.0
 rouge==1.0.1
 rouge_score==0.1.2
