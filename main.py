@@ -177,11 +177,11 @@ def T5Trainer(
         correct = 0
         assert len(preds) == len(targets)
         for idx, pred in enumerate(preds):
-            referece = targets[idx]
-            referece = extract_ans(referece)
+            reference = targets[idx]
+            reference = extract_ans(reference)
             extract_pred = extract_ans(pred)
             best_option = extract_pred
-            if referece == best_option:
+            if reference == best_option:
                 correct +=1 
         return {'accuracy': 1.0*correct/len(targets)}
     
