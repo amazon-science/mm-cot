@@ -13,8 +13,6 @@ from utils_prompt import *
 from utils_evaluate import get_scores
 from rich.table import Column, Table
 from rich import box
-from rich.console import Console
-console = Console(record=True)
 from torch import cuda
 import nltk
 import evaluate
@@ -65,8 +63,8 @@ def T5Trainer(
 
     tokenizer = T5Tokenizer.from_pretrained(args.model)
 
-    console.log(f"""[Model]: Loading {args.model}...\n""")
-    console.log(f"[Data]: Reading data...\n")
+    print(f"""[Model]: Loading {args.model}...\n""")
+    print(f"[Data]: Reading data...\n")
     problems = dataframe['problems']
     qids = dataframe['qids']
     train_qids = qids['train']
