@@ -17,6 +17,7 @@ from transformers.modeling_outputs import (
     Seq2SeqLMOutput,
 )
 
+
 class T5ForMultimodalGeneration(T5ForConditionalGeneration):
     _keys_to_ignore_on_load_missing = [
         r"encoder.embed_tokens.weight",
@@ -30,7 +31,7 @@ class T5ForMultimodalGeneration(T5ForConditionalGeneration):
     def __init__(self, config: T5Config, patch_size, padding_idx, save_dir):
         super().__init__(config)
         self.model_dim = config.d_model
-        
+
         self.padding_idx = padding_idx
         self.out = open(os.path.join(save_dir, 'gate.txt'), 'w')
 
@@ -38,7 +39,8 @@ class T5ForMultimodalGeneration(T5ForConditionalGeneration):
         self.patch_num, self.patch_dim = patch_size
 
         self.image_dense = nn.Linear(self.patch_dim, config.d_model)
-        self.mha_layer = torch.nn.MultiheadAttention(embed_dim=config.hidden_size, kdim=config.hidden_size, vdim=config.hidden_size, num_heads=1, batch_first=True)
+        self.mha_layer = torch.nn.MultiheadAttention(
+            embed_dim=config.hidden_size, kdim=config.hidden_size, vdim=config.hidden_size, num_heads=1, batch_first=True)
         self.gate_dense = nn.Linear(2*config.hidden_size, config.hidden_size)
         self.sigmoid = nn.Sigmoid()
 
@@ -108,15 +110,17 @@ class T5ForMultimodalGeneration(T5ForConditionalGeneration):
         elif return_dict and not isinstance(encoder_outputs, BaseModelOutput):
             encoder_outputs = BaseModelOutput(
                 last_hidden_state=encoder_outputs[0],
-                hidden_states=encoder_outputs[1] if len(encoder_outputs) > 1 else None,
-                attentions=encoder_outputs[2] if len(encoder_outputs) > 2 else None,
+                hidden_states=encoder_outputs[1] if len(
+                    encoder_outputs) > 1 else None,
+                attentions=encoder_outputs[2] if len(
+                    encoder_outputs) > 2 else None,
             )
 
-
         hidden_states = encoder_outputs[0]
-        
+
         image_embedding = self.image_dense(image_ids)
-        image_att, _ = self.mha_layer(hidden_states, image_embedding, image_embedding)
+        image_att, _ = self.mha_layer(
+            hidden_states, image_embedding, image_embedding)
 
         merge = torch.cat([hidden_states, image_att], dim=-1)
         gate = self.sigmoid(self.gate_dense(merge))
@@ -134,11 +138,13 @@ class T5ForMultimodalGeneration(T5ForConditionalGeneration):
             torch.cuda.set_device(self.decoder.first_device)
             hidden_states = hidden_states.to(self.decoder.first_device)
             if decoder_input_ids is not None:
-                decoder_input_ids = decoder_input_ids.to(self.decoder.first_device)
+                decoder_input_ids = decoder_input_ids.to(
+                    self.decoder.first_device)
             if attention_mask is not None:
                 attention_mask = attention_mask.to(self.decoder.first_device)
             if decoder_attention_mask is not None:
-                decoder_attention_mask = decoder_attention_mask.to(self.decoder.first_device)
+                decoder_attention_mask = decoder_attention_mask.to(
+                    self.decoder.first_device)
 
         # Decode
         decoder_outputs = self.decoder(
@@ -174,7 +180,8 @@ class T5ForMultimodalGeneration(T5ForConditionalGeneration):
         loss = None
         if labels is not None:
             loss_fct = CrossEntropyLoss(ignore_index=-100)
-            loss = loss_fct(lm_logits.view(-1, lm_logits.size(-1)), labels.view(-1))
+            loss = loss_fct(
+                lm_logits.view(-1, lm_logits.size(-1)), labels.view(-1))
             # TODO(thom): Add z_loss https://github.com/tensorflow/mesh/blob/fa19d69eafc9a482aff0b59ddd96b025c0cb207d/mesh_tensorflow/layers.py#L666
 
         if not return_dict:

@@ -5,6 +5,7 @@ Adapted from https://github.com/lupantech/ScienceQA
 from dataclasses import dataclass
 from typing import List, Optional
 
+
 def get_question_text(problem):
     question = problem['question']
     return question
@@ -25,11 +26,13 @@ def get_choice_text(probelm, options):
     for i, c in enumerate(choices):
         choice_list.append("({}) {}".format(options[i], c))
     choice_txt = " ".join(choice_list)
-    #print(choice_txt)
+    # print(choice_txt)
     return choice_txt
+
 
 def get_origin_answer(problem, options):
     return problem['choices'][problem['answer']]
+
 
 def get_answer(problem, options):
     return options[problem['answer']]
@@ -47,11 +50,11 @@ def get_solution_text(problem):
     return solution
 
 
-def create_one_example(format, question, context, choice, answer, lecture, solution, test_example=True, WithOutput = False, curr_le_data=None):
+def create_one_example(format, question, context, choice, answer, lecture, solution, test_example=True, WithOutput=False, curr_le_data=None):
 
     input_format, output_format = format.split("-")
 
-    ## Inputs
+    # Inputs
     if input_format == "CQM":
         input = f"Context: {context}\nQuestion: {question}\nOptions: {choice}\n"
     elif input_format == "QCM":
@@ -123,8 +126,7 @@ def create_one_example(format, question, context, choice, answer, lecture, solut
 
     elif output_format == 'E':
         output = f"Solution: {solution}"
-        
-    
+
     if WithOutput:
         if output.endswith("BECAUSE:"):
             output = output.replace("BECAUSE:", "").strip()
@@ -132,13 +134,12 @@ def create_one_example(format, question, context, choice, answer, lecture, solut
             text = input + f'Solution:'
         elif output_format == 'A':
             text = input + f'Answer:'
-        else: 
+        else:
             text = input + f'Solution:'
         text = text.replace("  ", " ").strip()
         output = output.replace("  ", " ").strip()
         return text, output
-        
-        
+
     text = input + output
     text = text.replace("  ", " ").strip()
     if text.endswith("BECAUSE:"):
@@ -192,6 +193,7 @@ def build_prompt(problems, shot_qids, test_qid, args):
 
     return prompt_input
 
+
 def build_train_pair(problems, test_qid, args, curr_le_data=None):
 
     examples = []
@@ -200,29 +202,30 @@ def build_train_pair(problems, test_qid, args, curr_le_data=None):
     question = get_question_text(problems[test_qid])
     context = get_context_text(problems[test_qid], args.use_caption)
     choice = get_choice_text(problems[test_qid], args.options)
-    
+
     lecture = get_lecture_text(problems[test_qid])
     solution = get_solution_text(problems[test_qid])
 
     # answer_text = get_origin_answer(problems[test_qid], args.options)
     answer_option = get_answer(problems[test_qid], args.options)
     answer = "(" + answer_option + ")"
-    
+
     test_example, target = create_one_example(args.prompt_format,
-                                      question,
-                                      context,
-                                      choice,
-                                      answer,
-                                      lecture,
-                                      solution,
-                                      test_example=False,WithOutput = True, curr_le_data=curr_le_data)
+                                              question,
+                                              context,
+                                              choice,
+                                              answer,
+                                              lecture,
+                                              solution,
+                                              test_example=False, WithOutput=True, curr_le_data=curr_le_data)
     examples.append(test_example)
-    
+
     target = target.replace("Answer:", "").strip()
     # create the prompt input
     prompt_input = '\n\n'.join(examples)
 
     return prompt_input, target
+
 
 @dataclass(frozen=True)
 class InputFeatures:
