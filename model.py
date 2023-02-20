@@ -2,20 +2,20 @@
 Adapted from https://github.com/huggingface/transformers
 '''
 
-from transformers import T5Config, T5ForConditionalGeneration
-from transformers.models.t5.modeling_t5 import T5Stack, __HEAD_MASK_WARNING_MSG, T5EncoderModel
 import copy
-import math
 import os
 import warnings
 from typing import Optional, Tuple, Union
+
 import torch
 from torch import nn
 from torch.nn import CrossEntropyLoss
+from transformers import T5Config, T5ForConditionalGeneration
 from transformers.modeling_outputs import (
     BaseModelOutput,
     Seq2SeqLMOutput,
 )
+from transformers.models.t5.modeling_t5 import T5Stack
 
 
 class T5ForMultimodalGeneration(T5ForConditionalGeneration):
