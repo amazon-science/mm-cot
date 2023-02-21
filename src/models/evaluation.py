@@ -8,7 +8,7 @@ import warnings
 import pandas as pd
 from sentence_transformers import SentenceTransformer
 
-from evaluations import caculate_bleu, caculate_rouge, caculate_similariry
+from src.models.evaluations import caculate_bleu, caculate_rouge, caculate_similariry
 
 warnings.filterwarnings('ignore')
 

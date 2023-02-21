@@ -1,10 +1,9 @@
-import os
 from torch.utils.data import Dataset
 import os
 import json
 import numpy as np
 import torch
-from utils_prompt import *
+from src.models.prompt import *
 
 img_shape = {
     "resnet": (512, 2048),
@@ -40,19 +39,19 @@ def load_data_img(args):
     pid_splits = json.load(
         open(os.path.join(args.data_root, 'scienceqa/pid_splits.json')))
     captions = json.load(open(args.caption_file))["captions"]
-    name_maps = json.load(open('vision_features/name_map.json'))
+    name_maps = json.load(open('data/vision_features/name_map.json'))
 
     # check
     if args.img_type == "resnet":
-        image_features = np.load('vision_features/resnet.npy')
+        image_features = np.load('data/resnet.npy')
         image_features = np.expand_dims(image_features, axis=1)
         image_features = image_features.repeat(512, axis=1)
     elif args.img_type == "clip":
-        image_features = np.load('vision_features/clip.npy')
+        image_features = np.load('data/vision_features/clip.npy')
     elif args.img_type == "detr":
-        image_features = np.load('vision_features/detr.npy')
+        image_features = np.load('data/vision_features/detr.npy')
     else:
-        image_features = np.load('vision_features/detr.npy')
+        image_features = np.load('data/vision_features/detr.npy')
     print("img_features size: ", image_features.shape)
 
     for qid in problems:
