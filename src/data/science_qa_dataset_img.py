@@ -6,6 +6,7 @@ from torch.utils.data import Dataset
 
 from src.models.prompt import build_train_pair
 
+# TODO img_shape should not be here!
 img_shape = {
     "resnet": (512, 2048),
     "clip": (49, 2048),

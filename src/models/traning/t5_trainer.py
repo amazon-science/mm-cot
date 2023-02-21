@@ -1,17 +1,16 @@
 import json
 import os
 import random
-import re
-import nltk
-import evaluate
+
 import numpy as np
 import torch
 from transformers import T5Tokenizer, DataCollatorForSeq2Seq, Seq2SeqTrainingArguments, Seq2SeqTrainer
 
 from src.data.science_qa_dataset_img import ScienceQADatasetImg, img_shape
 from src.data.science_qa_dataset_std import ScienceQADatasetStd
-from src.models.evaluation import get_scores
+from src.models.evaluation.evaluation import get_scores
 from src.models.model import T5ForConditionalGeneration, T5ForMultimodalGeneration
+from src.models.traning.t5_training_metrics import compute_metrics_rougel, extract_ans, compute_metrics_acc
 
 
 def T5Trainer(
@@ -23,8 +22,6 @@ def T5Trainer(
 
     if args.evaluate_dir is not None:
         args.model = args.evaluate_dir
-
-    use_auth_token = os.getenv("use_auth_token")
 
     tokenizer = T5Tokenizer.from_pretrained(
         pretrained_model_name_or_path=args.model)
@@ -50,6 +47,7 @@ def T5Trainer(
     # ---------------------------------
 
     padding_idx = tokenizer._convert_token_to_id(tokenizer.pad_token)
+
     if args.img_type is not None:
         patch_size = img_shape[args.img_type]
         model = T5ForMultimodalGeneration.from_pretrained(
@@ -121,75 +119,6 @@ def T5Trainer(
     datacollator = DataCollatorForSeq2Seq(tokenizer)
     print("model parameters: ", model.num_parameters())
 
-    def extract_ans(ans):
-        pattern = re.compile(r'The answer is \(([A-Z])\)')
-        res = pattern.findall(ans)
-
-        if len(res) == 1:
-            answer = res[0]  # 'A', 'B', ...
-        else:
-            answer = "FAILED"
-        return answer
-
-    # accuracy for answer inference
-    def compute_metrics_acc(eval_preds):
-        if args.use_generate:
-            preds, targets = eval_preds
-            if isinstance(preds, tuple):
-                preds = preds[0]
-        else:
-            preds = eval_preds.predictions[0]
-            targets = eval_preds.label_ids
-            preds = preds.argmax(axis=2)
-        preds = tokenizer.batch_decode(
-            preds, skip_special_tokens=True, clean_up_tokenization_spaces=True)
-        targets = tokenizer.batch_decode(
-            targets, skip_special_tokens=True, clean_up_tokenization_spaces=True)
-        correct = 0
-        assert len(preds) == len(targets)
-        for idx, pred in enumerate(preds):
-            reference = targets[idx]
-            reference = extract_ans(reference)
-            extract_pred = extract_ans(pred)
-            best_option = extract_pred
-            if reference == best_option:
-                correct += 1
-        return {'accuracy': 1.0*correct/len(targets)}
-
-    # rougel for rationale generation
-    metric = evaluate.load("rouge")
-
-    def postprocess_text(preds, labels):
-        preds = [pred.strip() for pred in preds]
-        labels = [label.strip() for label in labels]
-        preds = ["\n".join(nltk.sent_tokenize(pred)) for pred in preds]
-        labels = ["\n".join(nltk.sent_tokenize(label)) for label in labels]
-        return preds, labels
-
-    def compute_metrics_rougel(eval_preds):
-        if args.use_generate:
-            preds, targets = eval_preds
-            if isinstance(preds, tuple):
-                preds = preds[0]
-        else:
-            preds = eval_preds.predictions[0]
-            targets = eval_preds.label_ids
-            preds = preds.argmax(axis=2)
-        preds = tokenizer.batch_decode(
-            preds, skip_special_tokens=True, clean_up_tokenization_spaces=True)
-        targets = tokenizer.batch_decode(
-            targets, skip_special_tokens=True, clean_up_tokenization_spaces=True)
-
-        decoded_preds, decoded_labels = postprocess_text(preds, targets)
-
-        result = metric.compute(predictions=decoded_preds,
-                                references=decoded_labels, use_stemmer=True)
-        result = {k: round(v * 100, 4) for k, v in result.items()}
-        prediction_lens = [np.count_nonzero(
-            pred != tokenizer.pad_token_id) for pred in preds]
-        result["gen_len"] = np.mean(prediction_lens)
-        return result
-
     # only use the last model for evaluation to save time
     if args.final_eval:
         training_args = Seq2SeqTrainingArguments(
@@ -238,7 +167,7 @@ def T5Trainer(
         eval_dataset=eval_set,
         data_collator=datacollator,
         tokenizer=tokenizer,
-        compute_metrics=compute_metrics_acc if args.prompt_format != "QCM-LE" else compute_metrics_rougel
+        compute_metrics=compute_metrics_acc(use_generate=args.use_generate, tokenizer=tokenizer) if args.prompt_format != "QCM-LE" else compute_metrics_rougel(use_generate=args.use_generate, tokenizer=tokenizer)
     )
 
     if args.evaluate_dir is None:
