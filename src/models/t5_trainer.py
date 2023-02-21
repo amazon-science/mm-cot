@@ -26,7 +26,8 @@ def T5Trainer(
 
     use_auth_token = os.getenv("use_auth_token")
 
-    tokenizer = T5Tokenizer.from_pretrained(pretrained_model_name_or_path = args.model)
+    tokenizer = T5Tokenizer.from_pretrained(
+        pretrained_model_name_or_path=args.model)
 
     print(f"[Model]: Loading {args.model}...\n")
     print(f"[Data]: Reading data...\n")
