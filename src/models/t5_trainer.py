@@ -2,13 +2,14 @@ import json
 import os
 import random
 import re
-
+import nltk
 import evaluate
 import numpy as np
 import torch
 from transformers import T5Tokenizer, DataCollatorForSeq2Seq, Seq2SeqTrainingArguments, Seq2SeqTrainer
 
-from src.data.data import img_shape, ScienceQADatasetStd, ScienceQADatasetImg
+from src.data.science_qa_dataset_img import ScienceQADatasetImg, img_shape
+from src.data.science_qa_dataset_std import ScienceQADatasetStd
 from src.models.evaluation import get_scores
 from src.models.model import T5ForConditionalGeneration, T5ForMultimodalGeneration
 
@@ -16,8 +17,8 @@ from src.models.model import T5ForConditionalGeneration, T5ForMultimodalGenerati
 def T5Trainer(
         dataframe, args
 ):
-    torch.manual_seed(args.seed)  # pytorch random seed
-    np.random.seed(args.seed)  # numpy random seed
+    torch.manual_seed(args.seed)
+    np.random.seed(args.seed)
     torch.backends.cudnn.deterministic = True
 
     if args.evaluate_dir is not None:
@@ -27,14 +28,16 @@ def T5Trainer(
 
     tokenizer = T5Tokenizer.from_pretrained(pretrained_model_name_or_path = args.model)
 
-    print(f"""[Model]: Loading {args.model}...\n""")
+    print(f"[Model]: Loading {args.model}...\n")
     print(f"[Data]: Reading data...\n")
+
     problems = dataframe['problems']
     qids = dataframe['qids']
     train_qids = qids['train']
     test_qids = qids['test']
     val_qids = qids['val']
 
+    # ---------------------------------
     if args.evaluate_dir is not None:
         save_dir = args.evaluate_dir
     else:
@@ -43,6 +46,7 @@ def T5Trainer(
         save_dir = f"{args.output_dir}/{args.user_msg}_{model_name}_{args.img_type}_{args.prompt_format}_lr{args.lr}_bs{args.bs * gpu_count}_op{args.output_len}_ep{args.epoch}"
         if not os.path.exists(save_dir):
             os.mkdir(save_dir)
+    # ---------------------------------
 
     padding_idx = tokenizer._convert_token_to_id(tokenizer.pad_token)
     if args.img_type is not None:
