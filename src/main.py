@@ -7,7 +7,7 @@ from rich.table import Column, Table
 
 from src.data.data import load_data_std, load_data_img
 from src.models.t5_trainer import T5Trainer
-from src.parser_args import parse_args
+from src.args_parser import parse_args
 
 if __name__ == '__main__':
 
