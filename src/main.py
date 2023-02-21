@@ -6,7 +6,7 @@ from rich import box
 from rich.table import Column, Table
 
 from src.data.data import load_data_std, load_data_img
-from src.models.traning.t5_trainer import T5Trainer
+from src.models.training.t5_trainer import T5Trainer
 from src.args_parser import parse_args
 
 if __name__ == '__main__':
