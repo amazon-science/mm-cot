@@ -1,10 +1,9 @@
-import os
 from torch.utils.data import Dataset
 import os
 import json
 import numpy as np
 import torch
-from utils_prompt import *
+from src.models.prompt import *
 
 img_shape = {
     "resnet": (512, 2048),
@@ -12,9 +11,12 @@ img_shape = {
     "detr": (100, 256),
 }
 
+
 def load_data_std(args):
-    problems = json.load(open(os.path.join(args.data_root, 'scienceqa/problems.json')))
-    pid_splits = json.load(open(os.path.join(args.data_root, 'scienceqa/pid_splits.json')))
+    problems = json.load(
+        open(os.path.join(args.data_root, 'scienceqa/problems.json')))
+    pid_splits = json.load(
+        open(os.path.join(args.data_root, 'scienceqa/pid_splits.json')))
     captions = json.load(open(args.caption_file))["captions"]
 
     for qid in problems:
@@ -27,26 +29,29 @@ def load_data_std(args):
     print(f"number of val problems: {len(val_qids)}\n")
     print(f"number of test problems: {len(test_qids)}\n")
 
-    qids = {'train': train_qids, 'val':val_qids,'test':test_qids}
+    qids = {'train': train_qids, 'val': val_qids, 'test': test_qids}
     return problems, qids,
 
+
 def load_data_img(args):
-    problems = json.load(open(os.path.join(args.data_root, 'scienceqa/problems.json')))
-    pid_splits = json.load(open(os.path.join(args.data_root, 'scienceqa/pid_splits.json')))
+    problems = json.load(
+        open(os.path.join(args.data_root, 'scienceqa/problems.json')))
+    pid_splits = json.load(
+        open(os.path.join(args.data_root, 'scienceqa/pid_splits.json')))
     captions = json.load(open(args.caption_file))["captions"]
-    name_maps = json.load(open('vision_features/name_map.json'))
+    name_maps = json.load(open('data/vision_features/name_map.json'))
 
     # check
     if args.img_type == "resnet":
-        image_features = np.load('vision_features/resnet.npy')
+        image_features = np.load('data/resnet.npy')
         image_features = np.expand_dims(image_features, axis=1)
         image_features = image_features.repeat(512, axis=1)
     elif args.img_type == "clip":
-        image_features = np.load('vision_features/clip.npy')
+        image_features = np.load('data/vision_features/clip.npy')
     elif args.img_type == "detr":
-        image_features = np.load('vision_features/detr.npy')
+        image_features = np.load('data/vision_features/detr.npy')
     else:
-        image_features = np.load('vision_features/detr.npy')
+        image_features = np.load('data/vision_features/detr.npy')
     print("img_features size: ", image_features.shape)
 
     for qid in problems:
@@ -59,8 +64,9 @@ def load_data_img(args):
     print(f"number of val problems: {len(val_qids)}\n")
     print(f"number of test problems: {len(test_qids)}\n")
 
-    qids = {'train': train_qids, 'val':val_qids,'test':test_qids}
+    qids = {'train': train_qids, 'val': val_qids, 'test': test_qids}
     return problems, qids, name_maps, image_features
+
 
 class ScienceQADatasetStd(Dataset):
     """
@@ -74,13 +80,13 @@ class ScienceQADatasetStd(Dataset):
         self, problems, qids, tokenizer, source_len, target_len, args, test_le=None
     ):
         self.tokenizer = tokenizer
-        self.data = {qid : problems[qid] for qid in qids}
+        self.data = {qid: problems[qid] for qid in qids}
         self.source_len = source_len
         self.summ_len = target_len
         self.target_text = []
         self.source_text = []
         if test_le is not None:
-            test_le_data =json.load(open(test_le))["preds"]
+            test_le_data = json.load(open(test_le))["preds"]
         else:
             test_le_data = None
         idx = 0
@@ -90,7 +96,8 @@ class ScienceQADatasetStd(Dataset):
                 idx += 1
             else:
                 curr_le_data = None
-            prompt, target = build_train_pair(problems, qid, args, curr_le_data)
+            prompt, target = build_train_pair(
+                problems, qid, args, curr_le_data)
             self.target_text.append(target)
             self.source_text.append(prompt)
 
@@ -124,7 +131,7 @@ class ScienceQADatasetStd(Dataset):
         source_ids = source["input_ids"].squeeze()
         source_mask = source["attention_mask"].squeeze()
         target_ids = target["input_ids"].squeeze().tolist()
-        
+
         return {
             "input_ids": source_ids,
             "attention_mask": source_mask,
@@ -155,14 +162,14 @@ class ScienceQADatasetImg(Dataset):
             target_text (str): column name of target text
         """
         self.tokenizer = tokenizer
-        self.data = {qid : problems[qid] for qid in qids}
+        self.data = {qid: problems[qid] for qid in qids}
         self.source_len = source_len
         self.summ_len = target_len
         self.target_text = []
         self.source_text = []
         self.image_ids = []
         if test_le is not None:
-            test_le_data =json.load(open(test_le))["preds"]
+            test_le_data = json.load(open(test_le))["preds"]
         else:
             test_le_data = None
         idx = 0
@@ -172,7 +179,8 @@ class ScienceQADatasetImg(Dataset):
                 idx += 1
             else:
                 curr_le_data = None
-            prompt, target = build_train_pair(problems, qid, args, curr_le_data)
+            prompt, target = build_train_pair(
+                problems, qid, args, curr_le_data)
             self.target_text.append(target)
             self.source_text.append(prompt)
             if str(qid) in name_maps:
@@ -181,7 +189,7 @@ class ScienceQADatasetImg(Dataset):
             else:
                 shape = img_shape[args.img_type]
                 self.image_ids.append(np.zeros(shape))
-    
+
     def __len__(self):
         """returns the length of dataframe"""
 
@@ -219,7 +227,7 @@ class ScienceQADatasetImg(Dataset):
         target_ids = target["input_ids"].squeeze().tolist()
 
         image_ids = torch.tensor(image_ids).squeeze()
-        
+
         return {
             "input_ids": source_ids,
             "attention_mask": source_mask,

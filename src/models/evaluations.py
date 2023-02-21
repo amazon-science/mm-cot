@@ -8,8 +8,10 @@ from nltk.translate.bleu_score import sentence_bleu
 from sentence_transformers import util
 
 ########################
-## BLEU
+# BLEU
 ########################
+
+
 def tokenize(text):
     tokens = re.split(r'\s|\.', text)
     tokens = [t for t in tokens if len(t) > 0]
@@ -21,13 +23,17 @@ def bleu_score(reference, hypothesis, gram):
     hypothesis_tokens = tokenize(hypothesis)
 
     if gram == 1:
-        bleu = sentence_bleu([reference_tokens], hypothesis_tokens, (1., ))  # BELU-1
+        bleu = sentence_bleu([reference_tokens],
+                             hypothesis_tokens, (1., ))  # BELU-1
     elif gram == 2:
-        bleu = sentence_bleu([reference_tokens], hypothesis_tokens, (1. / 2., 1. / 2.))  # BELU-2
+        bleu = sentence_bleu([reference_tokens],
+                             hypothesis_tokens, (1. / 2., 1. / 2.))  # BELU-2
     elif gram == 3:
-        bleu = sentence_bleu([reference_tokens], hypothesis_tokens, (1. / 3., 1. / 3., 1. / 3.))  # BELU-3
+        bleu = sentence_bleu(
+            [reference_tokens], hypothesis_tokens, (1. / 3., 1. / 3., 1. / 3.))  # BELU-3
     elif gram == 4:
-        bleu = sentence_bleu([reference_tokens], hypothesis_tokens, (1. / 4., 1. / 4., 1. / 4., 1. / 4.))  # BELU-4
+        bleu = sentence_bleu([reference_tokens], hypothesis_tokens,
+                             (1. / 4., 1. / 4., 1. / 4., 1. / 4.))  # BELU-4
 
     return bleu
 
@@ -49,7 +55,7 @@ def caculate_bleu(results, data, gram):
 
 
 ########################
-## Rouge-L
+# Rouge-L
 ########################
 def score_rouge(str1, str2):
     rouge = Rouge(metrics=["rouge-l"])
@@ -76,7 +82,7 @@ def caculate_rouge(results, data):
 
 
 ########################
-## Sentence Similarity
+# Sentence Similarity
 ########################
 def similariry_score(str1, str2, model):
     # compute embedding for both lists

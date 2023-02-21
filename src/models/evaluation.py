@@ -2,15 +2,16 @@
 Adapted from https://github.com/lupantech/ScienceQA
 '''
 
-import os
 import json
-import argparse
 import warnings
+
 import pandas as pd
 from sentence_transformers import SentenceTransformer
-from evaluations import caculate_bleu, caculate_rouge, caculate_similariry
+
+from src.models.evaluations import caculate_bleu, caculate_rouge, caculate_similariry
 
 warnings.filterwarnings('ignore')
+
 
 def get_acc_with_contion(res_pd, key, values):
     if isinstance(values, list):
@@ -39,10 +40,12 @@ def get_scores(result_data, rationale_data, results_reference, data_file):
     # update data
     for index, row in res_pd.iterrows():
 
-        res_pd.loc[index, 'no_context'] = True if (not row['hint'] and not row['image']) else False
+        res_pd.loc[index, 'no_context'] = True if (
+            not row['hint'] and not row['image']) else False
         res_pd.loc[index, 'has_text'] = True if row['hint'] else False
         res_pd.loc[index, 'has_image'] = True if row['image'] else False
-        res_pd.loc[index, 'has_text_image'] = True if (row['hint'] and row['image']) else False
+        res_pd.loc[index, 'has_text_image'] = True if (
+            row['hint'] and row['image']) else False
 
         label = row['answer']
         pred = int(results[index])
@@ -53,23 +56,23 @@ def get_scores(result_data, rationale_data, results_reference, data_file):
     acc_average = len(res_pd[res_pd['true_false'] == True]) / num * 100
     #assert result_file.split('_')[-1] == "{:.3f}.json".format(acc_average)
 
-
     # rationale quality
 
-    ## BLEU
+    # BLEU
     bleu1 = caculate_bleu(rationale_data, results_reference, gram=1)
     bleu4 = caculate_bleu(rationale_data, results_reference, gram=4)
 
-    ## Rouge-L
+    # Rouge-L
     rouge = caculate_rouge(rationale_data, results_reference)
 
-    ## Similarity
-    model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2').cuda()
+    # Similarity
+    model = SentenceTransformer(
+        'sentence-transformers/all-MiniLM-L6-v2').cuda()
     similariry = caculate_similariry(rationale_data, results_reference, model)
 
     scores = {
-            "answer":{
-                'acc_natural':
+        "answer": {
+            'acc_natural':
                 get_acc_with_contion(res_pd, 'subject', 'natural science'),
                 'acc_social':
                 get_acc_with_contion(res_pd, 'subject', 'social science'),
@@ -82,18 +85,20 @@ def get_scores(result_data, rationale_data, results_reference, data_file):
                 'acc_no_context':
                 get_acc_with_contion(res_pd, 'no_context', True),
                 'acc_grade_1_6':
-                get_acc_with_contion(res_pd, 'grade', ['grade1', 'grade2', 'grade3', 'grade4', 'grade5', 'grade6']),
+                get_acc_with_contion(
+                    res_pd, 'grade', ['grade1', 'grade2', 'grade3', 'grade4', 'grade5', 'grade6']),
                 'acc_grade_7_12':
-                get_acc_with_contion(res_pd, 'grade', ['grade7', 'grade8', 'grade9', 'grade10', 'grade11', 'grade12']),
+                get_acc_with_contion(res_pd, 'grade', [
+                                     'grade7', 'grade8', 'grade9', 'grade10', 'grade11', 'grade12']),
                 'acc_average':
                 "{:.2f}".format(acc_average),
-            },
-            "rationale":{
-                'bleu1': bleu1 * 100,
+        },
+        "rationale": {
+            'bleu1': bleu1 * 100,
                 'bleu4': bleu4 * 100,
                 'rouge': rouge * 100,
                 'similariry': similariry * 100,
-            }
+        }
     }
 
     return scores
