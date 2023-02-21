@@ -14,7 +14,7 @@ def postprocess_text(predictions, labels):
     return predictions, labels
 
 
-def extract_prediciton_and_targets(eval_predictions, use_generate, tokenizer: T5Tokenizer):
+def extract_predictions_and_targets(eval_predictions, use_generate, tokenizer: T5Tokenizer):
     if use_generate:
         predictions, targets = eval_predictions
         if isinstance(predictions, tuple):
@@ -35,7 +35,7 @@ def extract_prediciton_and_targets(eval_predictions, use_generate, tokenizer: T5
 def compute_metrics_rougel(eval_predictions, use_generate, tokenizer: T5Tokenizer):
     metric = evaluate.load("rouge")
 
-    predictions, targets = extract_prediciton_and_targets(eval_predictions, use_generate, tokenizer)
+    predictions, targets = extract_predictions_and_targets(eval_predictions, use_generate, tokenizer)
     decoded_predictions, decoded_labels = postprocess_text(predictions, targets)
 
     result = metric.compute(predictions=decoded_predictions,
@@ -63,7 +63,7 @@ def compute_metrics_acc(eval_predictions, use_generate, tokenizer: T5Tokenizer):
     Accuracy for answer inference
     """
 
-    predictions, targets = extract_prediciton_and_targets(eval_predictions, use_generate, tokenizer)
+    predictions, targets = extract_predictions_and_targets(eval_predictions, use_generate, tokenizer)
     correct = 0
     assert len(predictions) == len(targets)
     for idx, pred in enumerate(predictions):
