@@ -1,5 +1,5 @@
 # rationale generation
-CUDA_VISIBLE_DEVICES=0,1 python models/main.py \
+CUDA_VISIBLE_DEVICES=0,1 python src/main.py \
   --model allenai/unifiedqa-t5-base \
   --user_msg rationale \
   --img_type detr \
