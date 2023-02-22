@@ -2,5 +2,5 @@ __pycache__/
 *.py[cod]
 .idea/
 *.egg*
-/data/
-/models/
+data/
+models/
