@@ -1,5 +1,4 @@
 huggingface-hub==0.0.12
-nltk==3.5
 numpy==1.23.2
 openai==0.23.0
 pandas==1.4.3
