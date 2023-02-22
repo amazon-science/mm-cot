@@ -64,6 +64,7 @@ class T5ForMultimodalGeneration(T5ForConditionalGeneration):
         self.device_map = None
 
     def forward(
+        self.data
         self,
         input_ids: Optional[torch.LongTensor] = None,
         image_ids=None,
