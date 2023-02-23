@@ -2,7 +2,7 @@ import evaluate
 import numpy as np
 from transformers import T5Tokenizer
 
-from src.models.training.t5_training_utils import extract_predictions_and_targets, extract_ans, postprocess_text
+from src.models.t5_multimodal_generation.t5_mg_utils import extract_predictions_and_targets, extract_ans, postprocess_text
 
 
 def compute_metrics_rougel(eval_predictions):

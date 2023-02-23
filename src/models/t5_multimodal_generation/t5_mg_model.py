@@ -5,6 +5,7 @@ Adapted from https://github.com/huggingface/transformers
 import copy
 import os
 import warnings
+from abc import ABC
 from typing import Optional, Tuple, Union
 
 import torch
@@ -15,10 +16,11 @@ from transformers.modeling_outputs import (
     BaseModelOutput,
     Seq2SeqLMOutput,
 )
-from transformers.models.t5.modeling_t5 import T5Stack
+from transformers.models.t5.modeling_t5 import T5Stack, __HEAD_MASK_WARNING_MSG
 
 
-class T5ForMultimodalGeneration(T5ForConditionalGeneration):
+class T5ForMultimodalGeneration(T5ForConditionalGeneration, ABC):
+
     _keys_to_ignore_on_load_missing = [
         r"encoder.embed_tokens.weight",
         r"decoder.embed_tokens.weight",

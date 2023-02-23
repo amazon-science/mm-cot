@@ -18,6 +18,8 @@ def extract_predictions_and_targets(eval_predictions, args, tokenizer):
 
     if args.use_generate:
         predictions, targets = eval_predictions
+
+        # TODO check if necessary
         if isinstance(predictions, tuple):
             predictions = predictions[0]
     else:

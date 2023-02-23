@@ -2,7 +2,7 @@ from transformers import T5Tokenizer, Seq2SeqTrainingArguments
 
 from src.data.science_qa_dataset_img import ScienceQADatasetImg, img_shape
 from src.data.science_qa_dataset_std import ScienceQADatasetStd
-from src.models.model import T5ForConditionalGeneration, T5ForMultimodalGeneration
+from src.models.t5_multimodal_generation.t5_mg_model import T5ForConditionalGeneration, T5ForMultimodalGeneration
 
 
 def get_t5_model(args, tokenizer: T5Tokenizer, save_dir: str):
@@ -10,7 +10,7 @@ def get_t5_model(args, tokenizer: T5Tokenizer, save_dir: str):
         padding_idx = tokenizer._convert_token_to_id(tokenizer.pad_token)
         patch_size = img_shape[args.img_type]
         model = T5ForMultimodalGeneration.from_pretrained(
-            args.model, patch_size=patch_size, padding_idx=padding_idx, save_dir=save_dir)
+                args.model, patch_size=patch_size, padding_idx=padding_idx, save_dir=save_dir)
     else:
         model = T5ForConditionalGeneration.from_pretrained(args.model)
     return model
