@@ -1,52 +1,71 @@
 import numpy as np
 import torch
 from transformers import T5Tokenizer
-
+import random
 from src.models.t5_multimodal_generation.t5_mg_service import T5ForMultimodalGenerationService
 from src.models.t5_multimodal_generation.t5_mg_training_params import get_training_data
+from src.data.data import load_data_std, load_data_img
+from src.constants import PromptFormat
 
 
 class T5ForMultimodalGenerationOrchestrationService:
 
-    def __init__(self, args, dataframe):
-        if args.evaluate_dir is not None:
-            args.model = args.evaluate_dir
-        if args.prompt_format == "QCM-LE":
-            torch.cuda.empty_cache()
+    def __init__(
+        self,
+        args
+    ):
+        self.args = args
+        self._set_random_seed()
 
-        torch.manual_seed(args.seed)
-        np.random.seed(args.seed)
+    def _set_random_seed(self):
+        random.seed(self.args.seed)
+        torch.manual_seed(self.args.seed)
+        np.random.seed(self.args.seed)
         torch.backends.cudnn.deterministic = True
 
-        self.tokenizer = T5Tokenizer.from_pretrained(
-            pretrained_model_name_or_path=args.model)
-        self.t5_model = T5ForMultimodalGenerationService(dataframe, args, self.tokenizer)
-        self.args = args
+    def load_data(self):
+        if self.args.img_type is not None:
+            problems, qids, name_maps, image_features = load_data_img(
+                self.args)  # probelms, test question ids, shot example ids
+            dataframe = {'problems': problems, 'qids': qids,
+                         'name_maps': name_maps, 'image_features': image_features}
+        else:
+            # probelms, test question ids, shot example ids
+            problems, qids = load_data_std(self.args)
+            dataframe = {'problems': problems, 'qids': qids}
+
         self.dataframe = dataframe
 
-    def _orchestration_create_trainer(self):
+    def load_model(self):
+        self.tokenizer = T5Tokenizer.from_pretrained(
+            pretrained_model_name_or_path=self.args.model)
+        self.t5_model = T5ForMultimodalGenerationService(
+            self.args, self.tokenizer)
 
-        train_set, eval_set, test_set = get_training_data(
+        self.train_set, self.eval_set, self.test_set = get_training_data(
             self.args, self.dataframe, self.tokenizer)
 
-        existing_model_dir = self.args.evaluate_dir
-        if existing_model_dir is None:
-            self.t5_model.fit(train_set, eval_set)
+        run_training = self.args.evaluate_dir is None
+        if run_training:
+            self.t5_model.fit(self.train_set, self.eval_set)
         else:
-            self.t5_model.build_seq2seq_base_trainer(train_set, eval_set)
+            self.t5_model.build_seq2seq_base_trainer(
+                self.train_set, self.eval_set)
 
-        self.t5_model.evaluate(test_set)
+    def evaluate(self):
 
-    def _orchestration_inference(self):
-        if self.args.prompt_format == "QCM-LE":
-            _, eval_set, _ = get_training_data(
-                self.args, self.dataframe, self.tokenizer)
-            self.t5_model.inference(eval_set)
+        generate_answer = self.args.prompt_format in [
+            PromptFormat.QUESTION_CONTEXT_OPTIONS_LECTURE_SOLUTION_ANSWER.value,
+        ]
 
-    def run_pipeline(self, run_inference: bool = True):
+        generate_rationale = self.args.prompt_format in [
+            PromptFormat.QUESTION_CONTEXT_OPTIONS_LECTURE_SOLUTION_ANSWER.value,
+            PromptFormat.QUESTION_CONTEXT_OPTIONS_LECTURE_SOLUTION.value,
+        ]
 
-        print("Orchestration | create trainer \n")
-        self._orchestration_create_trainer()
-        if run_inference:
-            print("Orchestration | Generate rationale \n")
-            self._orchestration_inference()
+        if generate_answer:
+            self.t5_model.evaluate(self.test_set)
+
+        if generate_rationale:
+            torch.cuda.empty_cache()
+            self.t5_model.inference(self.eval_set)

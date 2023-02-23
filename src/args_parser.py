@@ -1,3 +1,4 @@
+from src.constants import PromptFormat
 import argparse
 
 
@@ -42,9 +43,13 @@ def parse_args():
                         default='data/captions.json')
     parser.add_argument('--use_caption', action='store_true',
                         help='use image captions or not')
-    parser.add_argument('--prompt_format', type=str, default='QCM-A', help='prompt format template',
-                        choices=['QCM-A', 'QCM-LE', 'QCMG-A', 'QCM-LEA', 'QCM-ALE'])
+    parser.add_argument('--prompt_format', type=str, default=PromptFormat.QUESTION_CONTEXT_OPTIONS_ANSWER.value, help='prompt format template',
+                        choices=PromptFormat.get_values())
     parser.add_argument('--seed', type=int, default=42, help='random seed')
 
     args = parser.parse_args()
+
+    if args.evaluate_dir is not None:
+        args.model = args.evaluate_dir
+
     return args

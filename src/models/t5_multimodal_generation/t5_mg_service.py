@@ -25,7 +25,6 @@ class T5ForMultimodalGenerationService:
             pretrained_model_name_or_path=self.args.model)
 
     def fit(self, train_set, eval_set):
-
         self.build_seq2seq_base_trainer(train_set, eval_set)
         self.seq2seq_trainer.train()
         self.seq2seq_trainer.save_model(self.save_dir)
@@ -58,6 +57,7 @@ class T5ForMultimodalGenerationService:
         )
 
     def evaluate(self, test_set):
+        """ Generate the answer for the eval set """
 
         self._seq2seq_existing_check()
 
