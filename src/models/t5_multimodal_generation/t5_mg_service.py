@@ -30,7 +30,6 @@ class T5ForMultimodalGenerationService:
         self.seq2seq_trainer.save_model(self.save_dir)
 
     def build_seq2seq_base_trainer(self, train_set, eval_set):
-
         """
             Build a base seq2seq trainer.
             It is mandatory to run this method if t5 model isn't being trained
@@ -86,7 +85,8 @@ class T5ForMultimodalGenerationService:
                     if extract_pred in self.args.options:
                         extract_pred = self.args.options.index(extract_pred)
                     else:
-                        extract_pred = random.choice(range(0, len(self.args.options)))
+                        extract_pred = random.choice(
+                            range(0, len(self.args.options)))
                 else:
                     num_fail += 1
                     # random choose one option
@@ -138,5 +138,6 @@ class T5ForMultimodalGenerationService:
 
     def _seq2seq_existing_check(self):
         if not self.seq2seq_trainer:
-            raise NotImplementedError("ERROR T5000001 | Fit model or if model exists build a seq2seq trainer")
+            raise NotImplementedError(
+                "ERROR T5000001 | Fit model or if model exists build a seq2seq trainer")
         return True

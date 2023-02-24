@@ -46,7 +46,7 @@ class T5ForMultimodalGenerationOrchestrationService:
         self.tokenizer = T5Tokenizer.from_pretrained(
             pretrained_model_name_or_path=self.args.model)
         self.t5_model = T5ForMultimodalGenerationService(self.dataframe,
-            self.args, self.tokenizer)
+                                                         self.args, self.tokenizer)
 
         self.train_set, self.eval_set, self.test_set = get_training_data(
             self.args, self.dataframe, self.tokenizer)

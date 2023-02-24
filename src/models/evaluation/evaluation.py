@@ -28,7 +28,7 @@ def get_scores(result_data, rationale_data, results_reference, data_file):
     results = result_data
     num = len(results)
     assert num == 4241
-    #print("number of questions:", num)
+    # print("number of questions:", num)
 
     # read data file
     sqa_data = json.load(open(data_file))
@@ -54,7 +54,7 @@ def get_scores(result_data, rationale_data, results_reference, data_file):
 
     # accuracy scores
     acc_average = len(res_pd[res_pd['true_false'] == True]) / num * 100
-    #assert result_file.split('_')[-1] == "{:.3f}.json".format(acc_average)
+    # assert result_file.split('_')[-1] == "{:.3f}.json".format(acc_average)
 
     # rationale quality
 
