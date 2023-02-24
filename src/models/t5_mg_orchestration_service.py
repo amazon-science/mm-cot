@@ -16,6 +16,12 @@ class T5ForMultimodalGenerationOrchestrationService:
     ):
         self.args = args
         self._set_random_seed()
+        self.dataframe = None
+        self.train_set = None
+        self.eval_set = None
+        self.test_set = None
+        self.t5_model = None
+        self.tokenizer = None
 
     def _set_random_seed(self):
         random.seed(self.args.seed)
@@ -39,7 +45,7 @@ class T5ForMultimodalGenerationOrchestrationService:
     def load_model(self):
         self.tokenizer = T5Tokenizer.from_pretrained(
             pretrained_model_name_or_path=self.args.model)
-        self.t5_model = T5ForMultimodalGenerationService(
+        self.t5_model = T5ForMultimodalGenerationService(self.dataframe,
             self.args, self.tokenizer)
 
         self.train_set, self.eval_set, self.test_set = get_training_data(
