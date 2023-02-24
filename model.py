@@ -2,20 +2,19 @@
 Adapted from https://github.com/huggingface/transformers
 '''
 
-from transformers import T5Config, T5ForConditionalGeneration
-from transformers.models.t5.modeling_t5 import T5Stack, __HEAD_MASK_WARNING_MSG, T5EncoderModel
 import copy
 import math
 import os
 import warnings
 from typing import Optional, Tuple, Union
+
 import torch
 from torch import nn
 from torch.nn import CrossEntropyLoss
-from transformers.modeling_outputs import (
-    BaseModelOutput,
-    Seq2SeqLMOutput,
-)
+from transformers import T5Config, T5ForConditionalGeneration
+from transformers.modeling_outputs import BaseModelOutput, Seq2SeqLMOutput
+from transformers.models.t5.modeling_t5 import (__HEAD_MASK_WARNING_MSG, T5EncoderModel, T5Stack)
+
 
 class T5ForMultimodalGeneration(T5ForConditionalGeneration):
     _keys_to_ignore_on_load_missing = [
@@ -87,10 +86,13 @@ class T5ForMultimodalGeneration(T5ForConditionalGeneration):
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
 
         # FutureWarning: head_mask was separated into two input args - head_mask, decoder_head_mask
-        if head_mask is not None and decoder_head_mask is None:
-            if self.config.num_layers == self.config.num_decoder_layers:
-                warnings.warn(__HEAD_MASK_WARNING_MSG, FutureWarning)
-                decoder_head_mask = head_mask
+        if (
+            head_mask is not None
+            and decoder_head_mask is None
+            and self.config.num_layers == self.config.num_decoder_layers
+        ):
+            warnings.warn(__HEAD_MASK_WARNING_MSG, FutureWarning)
+            decoder_head_mask = head_mask
 
         # Encode if needed (training, first prediction pass)
         if encoder_outputs is None:
@@ -114,7 +116,7 @@ class T5ForMultimodalGeneration(T5ForConditionalGeneration):
 
 
         hidden_states = encoder_outputs[0]
-        
+
         image_embedding = self.image_dense(image_ids)
         image_att, _ = self.mha_layer(hidden_states, image_embedding, image_embedding)
 

@@ -5,28 +5,21 @@ Adapted from https://github.com/lupantech/ScienceQA
 from dataclasses import dataclass
 from typing import List, Optional
 
+
 def get_question_text(problem):
-    question = problem['question']
-    return question
+    return problem['question']
 
 
 def get_context_text(problem, use_caption):
     txt_context = problem['hint']
     img_context = problem['caption'] if use_caption else ""
-    context = " ".join([txt_context, img_context]).strip()
-    if context == "":
-        context = "N/A"
-    return context
+    return " ".join([txt_context, img_context]).strip() or "N/A"
 
 
 def get_choice_text(probelm, options):
     choices = probelm['choices']
-    choice_list = []
-    for i, c in enumerate(choices):
-        choice_list.append("({}) {}".format(options[i], c))
-    choice_txt = " ".join(choice_list)
-    #print(choice_txt)
-    return choice_txt
+    choice_list = [f"({options[i]}) {c}" for i, c in enumerate(choices)]
+    return " ".join(choice_list)
 
 def get_origin_answer(problem, options):
     return problem['choices'][problem['answer']]
@@ -37,14 +30,11 @@ def get_answer(problem, options):
 
 def get_lecture_text(problem):
     # \\n: GPT-3 can generate the lecture with more tokens.
-    lecture = problem['lecture'].replace("\n", "\\n")
-    return lecture
+    return problem['lecture'].replace("\n", "\\n")
 
 
 def get_solution_text(problem):
-    # \\n: GPT-3 can generate the solution with more tokens
-    solution = problem['solution'].replace("\n", "\\n")
-    return solution
+    return problem['solution'].replace("\n", "\\n")
 
 
 def create_one_example(format, question, context, choice, answer, lecture, solution, test_example=True, WithOutput = False, curr_le_data=None):
@@ -54,49 +44,45 @@ def create_one_example(format, question, context, choice, answer, lecture, solut
     ## Inputs
     if input_format == "CQM":
         input = f"Context: {context}\nQuestion: {question}\nOptions: {choice}\n"
-    elif input_format == "QCM":
-        input = f"Question: {question}\nContext: {context}\nOptions: {choice}\n"
-    elif input_format == "QM":
-        input = f"Question: {question}\nOptions: {choice}\n"
+    elif input_format == "CQMG":
+        input = (
+            f"Context: {context}\nQuestion: {question}\nOptions: {choice}\n{curr_le_data}\n"
+            if curr_le_data is not None
+            else f"Context: {context}\nQuestion: {question}\nOptions: {choice}\nSolution: {lecture} {solution}\n"
+        )
     elif input_format == "QC":
         input = f"Question: {question}\nContext: {context}\n"
-    elif input_format == "QCMG":
-        if curr_le_data is not None:
-            input = f"Question: {question}\nContext: {context}\nOptions: {choice}\n{curr_le_data}\n"
-        else:
-            input = f"Question: {question}\nContext: {context}\nOptions: {choice}\nSolution: {lecture} {solution}\n"
-    elif input_format == "CQMG":
-        if curr_le_data is not None:
-            input = f"Context: {context}\nQuestion: {question}\nOptions: {choice}\n{curr_le_data}\n"
-        else:
-            input = f"Context: {context}\nQuestion: {question}\nOptions: {choice}\nSolution: {lecture} {solution}\n"
-    # upper bound experiment
-    elif input_format == "QCML":
-        input = f"Question: {question}\nContext: {context}\nOptions: {choice}\nBECAUSE: {lecture}\n"
-    elif input_format == "QCME":
-        input = f"Question: {question}\nContext: {context}\nOptions: {choice}\nBECAUSE: {solution}\n"
-    elif input_format == "QCMLE":
-        input = f"Question: {question}\nContext: {context}\nOptions: {choice}\nBECAUSE: {lecture} {solution}\n"
+    elif input_format == "QCA":
+        input = f"Question: {question}\nContext: {context}\nAnswer: The answer is {answer}. \nBECAUSE:"
 
-    elif input_format == "QCLM":
-        input = f"Question: {question}\nContext: {context}\nBECAUSE: {lecture}\nOptions: {choice}\n"
     elif input_format == "QCEM":
         input = f"Question: {question}\nContext: {context}\nBECAUSE: {solution}\nOptions: {choice}\n"
     elif input_format == "QCLEM":
         input = f"Question: {question}\nContext: {context}\nBECAUSE: {lecture} {solution}\nOptions: {choice}\n"
+    elif input_format == "QCLM":
+        input = f"Question: {question}\nContext: {context}\nBECAUSE: {lecture}\nOptions: {choice}\n"
+    elif input_format == "QCM":
+        input = f"Question: {question}\nContext: {context}\nOptions: {choice}\n"
     elif input_format == "QCMA":
         input = f"Question: {question}\nContext: {context}\nOptions: {choice}\nAnswer: The answer is {answer}.\n"
-    elif input_format == "QCA":
-        input = f"Question: {question}\nContext: {context}\nAnswer: The answer is {answer}. \nBECAUSE:"
+    elif input_format == "QCME":
+        input = f"Question: {question}\nContext: {context}\nOptions: {choice}\nBECAUSE: {solution}\n"
+    elif input_format == "QCMG":
+        input = (
+            f"Question: {question}\nContext: {context}\nOptions: {choice}\n{curr_le_data}\n"
+            if curr_le_data is not None
+            else f"Question: {question}\nContext: {context}\nOptions: {choice}\nSolution: {lecture} {solution}\n"
+        )
+    elif input_format == "QCML":
+        input = f"Question: {question}\nContext: {context}\nOptions: {choice}\nBECAUSE: {lecture}\n"
+    elif input_format == "QCMLE":
+        input = f"Question: {question}\nContext: {context}\nOptions: {choice}\nBECAUSE: {lecture} {solution}\n"
 
+    elif input_format == "QM":
+        input = f"Question: {question}\nOptions: {choice}\n"
     # Outputs
     if test_example:
-        if output_format == 'A':
-            output = "Answer:"
-        elif output_format == 'E':
-            output = "Solution:"
-        else:
-            output = "Solution:"
+        output = "Answer:" if output_format == 'A' else "Solution:"
     elif output_format == 'A':
         output = f"Answer: The answer is {answer}."
 
@@ -123,22 +109,17 @@ def create_one_example(format, question, context, choice, answer, lecture, solut
 
     elif output_format == 'E':
         output = f"Solution: {solution}"
-        
-    
+
+
     if WithOutput:
         if output.endswith("BECAUSE:"):
             output = output.replace("BECAUSE:", "").strip()
-        if output_format == 'E':
-            text = input + f'Solution:'
-        elif output_format == 'A':
-            text = input + f'Answer:'
-        else: 
-            text = input + f'Solution:'
+        text = f'{input}Answer:' if output_format == 'A' else f'{input}Solution:'
         text = text.replace("  ", " ").strip()
         output = output.replace("  ", " ").strip()
         return text, output
-        
-        
+
+
     text = input + output
     text = text.replace("  ", " ").strip()
     if text.endswith("BECAUSE:"):
@@ -187,27 +168,22 @@ def build_prompt(problems, shot_qids, test_qid, args):
                                       test_example=True)
     examples.append(test_example)
 
-    # create the prompt input
-    prompt_input = '\n\n'.join(examples)
-
-    return prompt_input
+    return '\n\n'.join(examples)
 
 def build_train_pair(problems, test_qid, args, curr_le_data=None):
-
-    examples = []
 
     # test example
     question = get_question_text(problems[test_qid])
     context = get_context_text(problems[test_qid], args.use_caption)
     choice = get_choice_text(problems[test_qid], args.options)
-    
+
     lecture = get_lecture_text(problems[test_qid])
     solution = get_solution_text(problems[test_qid])
 
     # answer_text = get_origin_answer(problems[test_qid], args.options)
     answer_option = get_answer(problems[test_qid], args.options)
-    answer = "(" + answer_option + ")"
-    
+    answer = f"({answer_option})"
+
     test_example, target = create_one_example(args.prompt_format,
                                       question,
                                       context,
@@ -216,8 +192,7 @@ def build_train_pair(problems, test_qid, args, curr_le_data=None):
                                       lecture,
                                       solution,
                                       test_example=False,WithOutput = True, curr_le_data=curr_le_data)
-    examples.append(test_example)
-    
+    examples = [test_example]
     target = target.replace("Answer:", "").strip()
     # create the prompt input
     prompt_input = '\n\n'.join(examples)

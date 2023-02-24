@@ -1,23 +1,25 @@
+import argparse
+import json
 import os
+import random
+import re
+
 import numpy as np
 import torch
-import os
-import re
-import json
-import argparse
-import random
-from transformers import T5Tokenizer, DataCollatorForSeq2Seq, Seq2SeqTrainingArguments, Seq2SeqTrainer, T5ForConditionalGeneration
-from model import T5ForConditionalGeneration, T5ForMultimodalGeneration
-from utils_data import img_shape, load_data_std, load_data_img, ScienceQADatasetStd, ScienceQADatasetImg
-from utils_prompt import *
-from utils_evaluate import get_scores
-from rich.table import Column, Table
 from rich import box
 from rich.console import Console
+from rich.table import Column, Table
+from transformers import (DataCollatorForSeq2Seq, Seq2SeqTrainer, Seq2SeqTrainingArguments, T5ForConditionalGeneration, T5Tokenizer)
+
+from model import T5ForConditionalGeneration, T5ForMultimodalGeneration
+from utils_data import (ScienceQADatasetImg, ScienceQADatasetStd, img_shape, load_data_img, load_data_std)
+from utils_evaluate import get_scores
+from utils_prompt import *
+
 console = Console(record=True)
-from torch import cuda
-import nltk
 import evaluate
+import nltk
+from torch import cuda
 
 
 def parse_args():
@@ -36,7 +38,7 @@ def parse_args():
     parser.add_argument('--train_split', type=str, default='train', choices=['train', 'trainval', 'minitrain'])
     parser.add_argument('--val_split', type=str, default='val', choices=['test', 'val', 'minival'])
     parser.add_argument('--test_split', type=str, default='test', choices=['test', 'minitest'])
-    
+
     parser.add_argument('--use_generate', action='store_true', help='only for baseline to improve inference speed')
     parser.add_argument('--final_eval', action='store_true', help='only evaluate the model at the final epoch')
     parser.add_argument('--user_msg', type=str, default="baseline", help='experiment type in the save_dir')
@@ -50,8 +52,7 @@ def parse_args():
                         choices=['QCM-A', 'QCM-LE', 'QCMG-A', 'QCM-LEA', 'QCM-ALE'])
     parser.add_argument('--seed', type=int, default=42, help='random seed')
 
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
         
 def T5Trainer(
     dataframe, args,
@@ -59,7 +60,7 @@ def T5Trainer(
     torch.manual_seed(args.seed)  # pytorch random seed
     np.random.seed(args.seed)  # numpy random seed
     torch.backends.cudnn.deterministic = True
-    
+
     if args.evaluate_dir is not None:
         args.model = args.evaluate_dir
 
@@ -72,7 +73,7 @@ def T5Trainer(
     train_qids = qids['train']
     test_qids = qids['test']
     val_qids = qids['val']
-    
+
     if args.evaluate_dir is not None:
         save_dir = args.evaluate_dir
     else:
@@ -139,7 +140,7 @@ def T5Trainer(
             args,
             args.eval_le,
         )
-        
+
         test_set = ScienceQADatasetStd(
             problems,
             test_qids,
@@ -155,11 +156,8 @@ def T5Trainer(
     def extract_ans(ans):
         pattern = re.compile(r'The answer is \(([A-Z])\)')
         res = pattern.findall(ans)
-        
-        if len(res) == 1:
-            answer = res[0]  # 'A', 'B', ...
-        else:
-            answer = "FAILED" 
+
+        answer = res[0] if len(res) == 1 else "FAILED"
         return answer  
 
     # accuracy for answer inference
@@ -184,7 +182,7 @@ def T5Trainer(
             if reference == best_option:
                 correct +=1 
         return {'accuracy': 1.0*correct/len(targets)}
-    
+
     # rougel for rationale generation
     metric = evaluate.load("rouge")
     def postprocess_text(preds, labels):
@@ -218,13 +216,13 @@ def T5Trainer(
     if args.final_eval:
         training_args = Seq2SeqTrainingArguments(
             save_dir,
-            do_train=True if args.evaluate_dir is None else False,
+            do_train=args.evaluate_dir is None,
             do_eval=False,
             evaluation_strategy="no",
             logging_strategy="steps",
             save_strategy="epoch",
-            save_total_limit = 2,
-            learning_rate= args.lr,
+            save_total_limit=2,
+            learning_rate=args.lr,
             eval_accumulation_steps=args.eval_acc,
             per_device_train_batch_size=args.bs,
             per_device_eval_batch_size=args.eval_bs,
@@ -233,23 +231,24 @@ def T5Trainer(
             predict_with_generate=args.use_generate,
             report_to="none",
         )
-    # evaluate at each epoch
     else:
         training_args = Seq2SeqTrainingArguments(
             save_dir,
-            do_train=True if args.evaluate_dir is None else False,
+            do_train=args.evaluate_dir is None,
             do_eval=True,
             evaluation_strategy="epoch",
             logging_strategy="steps",
             save_strategy="epoch",
-            save_total_limit = 2,
-            learning_rate= args.lr,
+            save_total_limit=2,
+            learning_rate=args.lr,
             eval_accumulation_steps=args.eval_acc,
             per_device_train_batch_size=args.bs,
             per_device_eval_batch_size=args.eval_bs,
             weight_decay=0.01,
             num_train_epochs=args.epoch,
-            metric_for_best_model="accuracy" if args.prompt_format != "QCM-LE" else "rougeL",
+            metric_for_best_model="accuracy"
+            if args.prompt_format != "QCM-LE"
+            else "rougeL",
             predict_with_generate=args.use_generate,
             load_best_model_at_end=True,
             report_to="none",
@@ -268,12 +267,12 @@ def T5Trainer(
     if args.evaluate_dir is None:
         trainer.train()
         trainer.save_model(save_dir)
-        
+
     metrics = trainer.evaluate(eval_dataset = test_set)
     trainer.log_metrics("test", metrics)
     trainer.save_metrics("test", metrics)
 
-    predict_results = trainer.predict(test_dataset=test_set, max_length=args.output_len) 
+    predict_results = trainer.predict(test_dataset=test_set, max_length=args.output_len)
     if trainer.is_world_process_zero():
         if args.use_generate:
             preds, targets = predict_results.predictions, predict_results.label_ids
@@ -292,7 +291,7 @@ def T5Trainer(
         results_ans = {}
         results_rationale = {}
         results_reference = {}
-        
+
         num_fail = 0
         for idx, qid in enumerate(test_qids):
             pred = preds[int(idx)]
@@ -302,7 +301,7 @@ def T5Trainer(
                 if extract_pred in args.options:
                     extract_pred = args.options.index(extract_pred)
                 else:
-                    extract_pred = random.choice(range(0,len(args.options)))
+                    extract_pred = random.choice(range(len(args.options)))
             else:
                 num_fail += 1
                 extract_pred = random.choice(range(len(args.options))) # random choose one option
@@ -320,7 +319,7 @@ def T5Trainer(
         output_prediction_file = os.path.join(save_dir,"predictions_ans_test.json")
         with open(output_prediction_file, "w") as writer:
             writer.write(json.dumps(output_data, indent=4))
-    
+
     # generate the rationale for the eval set
     if args.prompt_format == "QCM-LE":
         torch.cuda.empty_cache()
