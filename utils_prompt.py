@@ -23,7 +23,7 @@ def get_choice_text(probelm, options):
     choices = probelm['choices']
     choice_list = []
     for i, c in enumerate(choices):
-        choice_list.append("({}) {}".format(options[i], c))
+        choice_list.append(f"({options[i]}) {c}")
     choice_txt = " ".join(choice_list)
     #print(choice_txt)
     return choice_txt
