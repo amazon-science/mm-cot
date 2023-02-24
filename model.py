@@ -3,7 +3,6 @@ Adapted from https://github.com/huggingface/transformers
 '''
 
 import copy
-import math
 import os
 import warnings
 from typing import Optional, Tuple, Union
@@ -26,7 +25,7 @@ class T5ForMultimodalGeneration(T5ForConditionalGeneration):
         r"decoder.block.0.layer.1.EncDecAttention.relative_attention_bias.weight",
     ]
 
-    def __init__(self, config: T5Config, patch_size, padding_idx, save_dir):
+    def __init__(self, config: T5Config, patch_size, padding_idx, save_dir) -> None:
         super().__init__(config)
         self.model_dim = config.d_model
         

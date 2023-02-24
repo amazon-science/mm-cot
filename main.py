@@ -161,7 +161,7 @@ def T5Trainer(
         return answer  
 
     # accuracy for answer inference
-    def compute_metrics_acc(eval_preds):
+    def compute_metrics_acc(eval_preds) -> dict[str, float]:
         if args.use_generate:
             preds, targets = eval_preds
             if isinstance(preds, tuple):
@@ -185,14 +185,14 @@ def T5Trainer(
 
     # rougel for rationale generation
     metric = evaluate.load("rouge")
-    def postprocess_text(preds, labels):
+    def postprocess_text(preds, labels) -> tuple[list[str], list[str]]:
         preds = [pred.strip() for pred in preds]
         labels = [label.strip() for label in labels]
         preds = ["\n".join(nltk.sent_tokenize(pred)) for pred in preds]
         labels = ["\n".join(nltk.sent_tokenize(label)) for label in labels]
         return preds, labels
 
-    def compute_metrics_rougel(eval_preds):
+    def compute_metrics_rougel(eval_preds) -> dict:
         if args.use_generate:
             preds, targets = eval_preds
             if isinstance(preds, tuple):

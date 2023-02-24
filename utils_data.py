@@ -1,8 +1,10 @@
 import json
 import os
+from typing import Any
 
 import numpy as np
 import torch
+from numpy import dtype, ndarray
 from torch.utils.data import Dataset
 
 from utils_prompt import *
@@ -13,7 +15,7 @@ img_shape = {
     "detr": (100, 256),
 }
 
-def load_data_std(args):
+def load_data_std(args) -> tuple[Any, dict[str, Any]]:
     problems = json.load(open(os.path.join(args.data_root, 'scienceqa/problems.json')))
     pid_splits = json.load(open(os.path.join(args.data_root, 'scienceqa/pid_splits.json')))
     captions = json.load(open(args.caption_file))["captions"]
@@ -31,7 +33,7 @@ def load_data_std(args):
     qids = {'train': train_qids, 'val':val_qids,'test':test_qids}
     return problems, qids,
 
-def load_data_img(args):
+def load_data_img(args) -> tuple[Any, dict[str, Any], Any, ndarray[Any, dtype] | Any]:
     problems = json.load(open(os.path.join(args.data_root, 'scienceqa/problems.json')))
     pid_splits = json.load(open(os.path.join(args.data_root, 'scienceqa/pid_splits.json')))
     captions = json.load(open(args.caption_file))["captions"]
@@ -71,7 +73,7 @@ class ScienceQADatasetStd(Dataset):
 
     def __init__(
         self, problems, qids, tokenizer, source_len, target_len, args, test_le=None
-    ):
+    ) -> None:
         self.tokenizer = tokenizer
         self.data = {qid : problems[qid] for qid in qids}
         self.source_len = source_len
@@ -90,10 +92,10 @@ class ScienceQADatasetStd(Dataset):
             self.target_text.append(target)
             self.source_text.append(prompt)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.target_text)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index) -> dict[str, Any]:
         source_text = str(self.source_text[index])
         target_text = str(self.target_text[index])
 
@@ -138,7 +140,7 @@ class ScienceQADatasetImg(Dataset):
 
     def __init__(
         self, problems, qids, name_maps, tokenizer, source_len, target_len, args, image_features, test_le=None
-    ):
+    ) -> None:
         """
         Initializes a Dataset class
 
@@ -175,12 +177,12 @@ class ScienceQADatasetImg(Dataset):
                 shape = img_shape[args.img_type]
                 self.image_ids.append(np.zeros(shape))
     
-    def __len__(self):
+    def __len__(self) -> int:
         """returns the length of dataframe"""
 
         return len(self.target_text)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index) -> dict[str, Any]:
         """return the input ids, attention masks and target ids"""
 
         source_text = str(self.source_text[index])

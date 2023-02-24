@@ -3,6 +3,7 @@ Adapted from https://github.com/lupantech/ScienceQA
 '''
 
 import re
+from typing import Any
 
 from nltk.translate.bleu_score import sentence_bleu
 from rouge import Rouge
@@ -12,7 +13,7 @@ from sentence_transformers import util
 ########################
 ## BLEU
 ########################
-def tokenize(text):
+def tokenize(text) -> list[str | Any]:
     tokens = re.split(r'\s|\.', text)
     tokens = [t for t in tokens if len(t) > 0]
     return tokens
@@ -34,7 +35,7 @@ def bleu_score(reference, hypothesis, gram):
     return bleu
 
 
-def caculate_bleu(results, data, gram):
+def caculate_bleu(results, data, gram) -> float:
     bleus = []
     for qid, output in results.items():
         prediction = output
@@ -57,7 +58,7 @@ def score_rouge(str1, str2):
     return scores['rouge-l']['f']
 
 
-def caculate_rouge(results, data):
+def caculate_rouge(results, data) -> float:
     rouges = []
     for qid, output in results.items():
         prediction = output
@@ -83,7 +84,7 @@ def similariry_score(str1, str2, model):
     return util.pytorch_cos_sim(embedding_1, embedding_2).item()
 
 
-def caculate_similariry(results, data, model):
+def caculate_similariry(results, data, model) -> float:
     scores = []
     for qid, output in results.items():
         prediction = output

@@ -2,11 +2,9 @@
 Adapted from https://github.com/lupantech/ScienceQA
 '''
 
-import argparse
 import json
-import os
 import warnings
-
+from typing import Any
 import pandas as pd
 from sentence_transformers import SentenceTransformer
 
@@ -23,7 +21,7 @@ def get_acc_with_contion(res_pd, key, values):
     return "{:.2f}".format(len(correct_pd) / len(total_pd) * 100)
 
 
-def get_scores(result_data, rationale_data, results_reference, data_file):
+def get_scores(result_data, rationale_data, results_reference, data_file) -> dict[str, Any]
     # read result file
     results = result_data
     num = len(results)
@@ -110,7 +108,7 @@ def get_scores(result_data, rationale_data, results_reference, data_file):
     }
 
 
-def print_scores(scores):
+def print_scores(scores) -> None:
     latex_output = ""
     for key, score in scores.items():
         print(f"{key[4:]}: \t{score}")
