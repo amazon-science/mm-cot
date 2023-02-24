@@ -69,9 +69,11 @@ class T5ForMultimodalGenerationOrchestrationService:
             PromptFormat.QUESTION_CONTEXT_OPTIONS_LECTURE_SOLUTION.value,
         ]
 
+        # torch.no_grad()
+        torch.cuda.empty_cache()
+
         if generate_answer:
             self.t5_model.evaluate(self.test_set)
 
         if generate_rationale:
-            torch.cuda.empty_cache()
             self.t5_model.inference(self.eval_set)

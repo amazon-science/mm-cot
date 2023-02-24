@@ -118,6 +118,7 @@ class T5ForMultimodalGenerationService:
         self._seq2seq_existing_check()
         trainer = self.seq2seq_trainer
 
+        # FIXME memory problems
         predict_results = trainer.predict(
             test_dataset=eval_set, max_length=self.args.output_len)
 
