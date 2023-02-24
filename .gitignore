@@ -4,3 +4,5 @@ __pycache__/
 *.egg*
 /data/
 /models/
+/data
+/models
