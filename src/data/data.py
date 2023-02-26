@@ -11,17 +11,7 @@ def load_data_std(args):
         open(os.path.join(args.data_root, 'scienceqa/pid_splits.json')))
     captions = json.load(open(args.caption_file))["captions"]
 
-    for qid in problems:
-        problems[qid]['caption'] = captions[qid] if qid in captions else ""
-
-    train_qids = pid_splits['%s' % args.train_split]
-    val_qids = pid_splits['%s' % args.val_split]
-    test_qids = pid_splits['%s' % args.test_split]
-    print(f"number of train problems: {len(train_qids)}\n")
-    print(f"number of val problems: {len(val_qids)}\n")
-    print(f"number of test problems: {len(test_qids)}\n")
-
-    qids = {'train': train_qids, 'val': val_qids, 'test': test_qids}
+    qids = get_qids(args, captions, pid_splits, problems)
     return problems, qids,
 
 
@@ -46,15 +36,19 @@ def load_data_img(args):
         image_features = np.load('data/vision_features/detr.npy')
     print("img_features size: ", image_features.shape)
 
+    qids = get_qids(args, captions, pid_splits, problems)
+    return problems, qids, name_maps, image_features
+
+
+def get_qids(args, captions, pid_splits, problems):
     for qid in problems:
         problems[qid]['caption'] = captions[qid] if qid in captions else ""
-
     train_qids = pid_splits['%s' % args.train_split]
     val_qids = pid_splits['%s' % args.val_split]
     test_qids = pid_splits['%s' % args.test_split]
     print(f"number of train problems: {len(train_qids)}\n")
     print(f"number of val problems: {len(val_qids)}\n")
     print(f"number of test problems: {len(test_qids)}\n")
-
     qids = {'train': train_qids, 'val': val_qids, 'test': test_qids}
-    return problems, qids, name_maps, image_features
+
+    return qids
