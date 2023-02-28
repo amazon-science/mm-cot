@@ -50,7 +50,7 @@ CUDA_VISIBLE_DEVICES=0,1 python main.py \
 ### Inference 
 
 Our trained models are available at [models](https://drive.google.com/file/d/1FtTYOJPHnWnFfCxNC6M3gar4RAX5E21b/view?usp=share_link). To use our trained models, please put the them under the ```models``` folder.
-After downloading models and saving them in the models subfolder, one needs to rename subfolders as follows:
+After downloading models and saving them in the models subfolder, please rename subfolders as follows:
 `models/MM-CoT-UnifiedQA-base-Rationale/...` -> `models/Rationale/...`
 `models/MM-CoT-UnifiedQA-base-Answer/...` -> `models/Answer/...`
 
