@@ -2,7 +2,7 @@ from transformers import T5Tokenizer, Seq2SeqTrainingArguments
 
 from src.data.science_qa_dataset_img import ScienceQADatasetImg, img_shape
 from src.data.science_qa_dataset_std import ScienceQADatasetStd
-from src.models.t5_multimodal_generation.t5_mg_model import T5ForConditionalGeneration, T5ForMultimodalGeneration
+from src.models.t5_multimodal_generation.model import T5ForConditionalGeneration, T5ForMultimodalGeneration
 
 
 def get_t5_model(args, tokenizer: T5Tokenizer, save_dir: str):

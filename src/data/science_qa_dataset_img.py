@@ -139,9 +139,9 @@ class ScienceQADatasetIterator:
 
     def __init__(self, dataset: ScienceQADataset, batch_size: int = 100):
         self._dataset = dataset
-        self.batch_size = batch_size
-        self.num_batches = int(len(self._dataset) / batch_size)
-        if len(self._dataset) % batch_size:
+        self.batch_size = batch_size if batch_size else len(self._dataset)
+        self.num_batches = int(len(self._dataset) / self.batch_size)
+        if len(self._dataset) %  self.batch_size:
             self.num_batches += 1
 
     def __iter__(self):

@@ -5,7 +5,7 @@ from rich import box
 from rich.table import Column, Table
 
 from src.args_parser import parse_args
-from src.models.t5_mg_orchestration_service import T5ForMultimodalGenerationOrchestrationService
+from src.models.chain_of_thought import ChainOfThought
 
 if __name__ == '__main__':
 
@@ -31,8 +31,7 @@ if __name__ == '__main__':
     if not os.path.exists(args.output_dir):
         os.mkdir(args.output_dir)
 
-    t5_orchestration_service = T5ForMultimodalGenerationOrchestrationService(
-        args)
-    t5_orchestration_service.load_data()
-    t5_orchestration_service.load_model()
-    t5_orchestration_service.evaluate()
+    chain_of_thought = ChainOfThought(args)
+    chain_of_thought.load_data()
+    chain_of_thought.load_model()
+    chain_of_thought.evaluate()

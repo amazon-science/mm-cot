@@ -46,6 +46,8 @@ def parse_args():
     parser.add_argument('--prompt_format', type=str, default=PromptFormat.QUESTION_CONTEXT_OPTIONS_ANSWER.value, help='prompt format template',
                         choices=PromptFormat.get_values())
     parser.add_argument('--seed', type=int, default=42, help='random seed')
+    parser.add_argument('--batch_size_in_memory', type=int, default=None,
+                        help='Number of examples to load in memory at a given time. If the dataset is larger, it would be split in chunks of batch_size_in_memory elements')
 
     args = parser.parse_args()
 

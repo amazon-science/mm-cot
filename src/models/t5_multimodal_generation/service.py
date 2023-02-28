@@ -9,10 +9,10 @@ from transformers import T5Tokenizer
 
 from src.data.science_qa_dataset_img import ScienceQADatasetIterator
 from src.models.evaluation.evaluation import get_scores
-from src.models.t5_multimodal_generation.t5_mg_training_params import get_t5_model, get_training_args
-from src.models.t5_multimodal_generation.t5_mg_utils import extract_predictions_and_targets, extract_ans, \
+from src.models.t5_multimodal_generation.training_params import get_t5_model, get_training_args
+from src.models.t5_multimodal_generation.utils import extract_predictions_and_targets, extract_ans, \
     postprocess_text
-from src.models.t5_multimodal_generation.t5_mg_utils import make_backup_dir
+from src.models.t5_multimodal_generation.utils import make_backup_dir
 from transformers.trainer_utils import EvalLoopOutput
 
 
@@ -124,8 +124,7 @@ class T5ForMultimodalGenerationService:
             "labels": []
         }
 
-        eval_set_iterator = ScienceQADatasetIterator(dataset=eval_set, batch_size=10)
-        for batch in eval_set_iterator:
+        for batch in ScienceQADatasetIterator(dataset=eval_set, batch_size=self.args.batch_size_in_memory):
             predict_results = self.seq2seq_trainer.predict(
                 test_dataset=batch, max_length=self.args.output_len)
 
@@ -152,7 +151,8 @@ class T5ForMultimodalGenerationService:
 
     def compute_metrics_rougel(self, eval_predictions):
 
-        predictions, targets = extract_predictions_and_targets(eval_predictions, self.args, self.tokenizer)
+        predictions, targets = extract_predictions_and_targets(
+            eval_predictions, self.args, self.tokenizer)
 
         metric = evaluate.load("rouge")
         decoded_predictions, decoded_labels = postprocess_text(
@@ -171,7 +171,8 @@ class T5ForMultimodalGenerationService:
         Accuracy for answer inference
         """
 
-        predictions, targets = extract_predictions_and_targets(eval_predictions, self.args, self.tokenizer)
+        predictions, targets = extract_predictions_and_targets(
+            eval_predictions, self.args, self.tokenizer)
         correct = 0
         assert len(predictions) == len(targets)
         for idx, pred in enumerate(predictions):

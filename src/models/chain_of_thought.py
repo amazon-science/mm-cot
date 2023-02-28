@@ -2,13 +2,13 @@ import numpy as np
 import torch
 from transformers import T5Tokenizer
 import random
-from src.models.t5_multimodal_generation.t5_mg_service import T5ForMultimodalGenerationService
-from src.models.t5_multimodal_generation.t5_mg_training_params import get_training_data
+from src.models.t5_multimodal_generation.service import T5ForMultimodalGenerationService
+from src.models.t5_multimodal_generation.training_params import get_training_data
 from src.data.data import load_data_std, load_data_img
 from src.constants import PromptFormat
 
 
-class T5ForMultimodalGenerationOrchestrationService:
+class ChainOfThought:
 
     def __init__(
         self,
@@ -69,7 +69,6 @@ class T5ForMultimodalGenerationOrchestrationService:
             PromptFormat.QUESTION_CONTEXT_OPTIONS_LECTURE_SOLUTION.value,
         ]
 
-        # torch.no_grad()
         torch.cuda.empty_cache()
 
         if generate_answer:
