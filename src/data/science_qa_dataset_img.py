@@ -1,4 +1,5 @@
 import json
+from abc import ABC, abstractmethod
 
 import numpy as np
 import torch
@@ -15,7 +16,14 @@ img_shape = {
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-class ScienceQADatasetImg(Dataset):
+
+class ScienceQADataset(Dataset, ABC):
+
+    @abstractmethod
+    def __len__(self): pass
+
+
+class ScienceQADatasetImg(ScienceQADataset):
     """
     Creating a custom dataset for reading the dataset and
     loading it into the dataloader to pass it to the
@@ -62,6 +70,7 @@ class ScienceQADatasetImg(Dataset):
         else:
             test_le_data = None
 
+        idx = 0
         for qid in self.data:
             if test_le_data is not None:
                 curr_le_data = test_le_data[idx]
@@ -111,9 +120,9 @@ class ScienceQADatasetImg(Dataset):
         }
 
     def process_data(
-        self,
-        text,
-        max_length
+            self,
+            text,
+            max_length
     ):
         text = " ".join(str(text).split())
         return self.tokenizer.batch_encode_plus(
@@ -124,3 +133,31 @@ class ScienceQADatasetImg(Dataset):
             padding="max_length",
             return_tensors="pt",
         )
+
+
+class ScienceQADatasetIterator:
+
+    def __init__(self, dataset: ScienceQADataset, batch_size: int = 100):
+        self._dataset = dataset
+        self.batch_size = batch_size
+        self.num_batches = int(len(self._dataset) / batch_size)
+        if len(self._dataset) % batch_size:
+            self.num_batches += 1
+
+    def __iter__(self):
+        self._index = 0
+        return self
+
+    def __next__(self):
+        if self._index < self.num_batches:
+            items = []
+            for i in range(self.batch_size):
+                try:
+                    index = (self._index * self.batch_size) + i
+                    items.append(self._dataset.__getitem__(index))
+                except IndexError:
+                    break
+            self._index += 1
+            return items
+        else:
+            raise StopIteration

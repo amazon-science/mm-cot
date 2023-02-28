@@ -3,18 +3,9 @@ import re
 
 import nltk
 import torch
-from transformers import T5Tokenizer
-
-from src.args_parser import parse_args
 
 
 def extract_predictions_and_targets(eval_predictions, args, tokenizer):
-
-    if not args:
-        args = parse_args()
-    if not tokenizer:
-        tokenizer = T5Tokenizer.from_pretrained(
-            pretrained_model_name_or_path=args.model)
 
     if args.use_generate:
         predictions, targets = eval_predictions

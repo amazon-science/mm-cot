@@ -2,19 +2,21 @@ import json
 import os
 import random
 
+import evaluate
 import numpy as np
-import torch
-from transformers import T5Tokenizer, DataCollatorForSeq2Seq, Seq2SeqTrainer
+from transformers import DataCollatorForSeq2Seq, Seq2SeqTrainer
+from transformers import T5Tokenizer
 
-from src.args_parser import parse_args
+from src.data.science_qa_dataset_img import ScienceQADatasetIterator
 from src.models.evaluation.evaluation import get_scores
-from src.models.t5_multimodal_generation.t5_mg_training_metrics import compute_metrics_rougel, extract_ans, compute_metrics_acc
-from src.models.t5_multimodal_generation.t5_mg_training_params import get_t5_model, get_training_data, get_training_args
-from src.models.t5_multimodal_generation.t5_mg_utils import extract_predictions_and_targets, make_backup_dir
+from src.models.t5_multimodal_generation.t5_mg_training_params import get_t5_model, get_training_args
+from src.models.t5_multimodal_generation.t5_mg_utils import extract_predictions_and_targets, extract_ans, \
+    postprocess_text
+from src.models.t5_multimodal_generation.t5_mg_utils import make_backup_dir
+from transformers.trainer_utils import EvalLoopOutput
 
 
 class T5ForMultimodalGenerationService:
-
     seq2seq_trainer = None
 
     def __init__(self, dataframe, args, tokenizer):
@@ -52,7 +54,7 @@ class T5ForMultimodalGenerationService:
             eval_dataset=eval_set,
             data_collator=data_collator,
             tokenizer=self.tokenizer,
-            compute_metrics=compute_metrics_acc if self.args.prompt_format != "QCM-LE" else compute_metrics_rougel
+            compute_metrics=self.compute_metrics_acc if self.args.prompt_format != "QCM-LE" else self.compute_metrics_rougel
         )
 
     def evaluate(self, test_set):
@@ -116,20 +118,26 @@ class T5ForMultimodalGenerationService:
         """ Generate the rationale for the eval set """
 
         self._seq2seq_existing_check()
-        trainer = self.seq2seq_trainer
 
-        # FIXME memory problems
-        predict_results = trainer.predict(
-            test_dataset=eval_set, max_length=self.args.output_len)
+        output_data = {
+            "preds": [],
+            "labels": []
+        }
 
-        if trainer.is_world_process_zero():
-            predictions, targets = extract_predictions_and_targets(
-                predict_results, self.args.use_generate, self.tokenizer)
-            predictions = [pred.strip() for pred in predictions]
+        eval_set_iterator = ScienceQADatasetIterator(dataset=eval_set, batch_size=10)
+        for batch in eval_set_iterator:
+            predict_results = self.seq2seq_trainer.predict(
+                test_dataset=batch, max_length=self.args.output_len)
 
-            output_data = {"preds": predictions,
-                           "labels": targets}
+            if self.seq2seq_trainer.is_world_process_zero():
+                predictions, targets = extract_predictions_and_targets(
+                    predict_results, self.args, self.tokenizer)
+                predictions = [pred.strip() for pred in predictions]
 
+                output_data["preds"].extend(predictions)
+                output_data["labels"].extend(targets)
+
+        if self.seq2seq_trainer.is_world_process_zero():
             output_prediction_file = os.path.join(
                 self.save_dir, "predictions_ans_eval.json")
 
@@ -141,3 +149,36 @@ class T5ForMultimodalGenerationService:
             raise NotImplementedError(
                 "ERROR T5000001 | Fit model or if model exists build a seq2seq trainer")
         return True
+
+    def compute_metrics_rougel(self, eval_predictions):
+
+        predictions, targets = extract_predictions_and_targets(eval_predictions, self.args, self.tokenizer)
+
+        metric = evaluate.load("rouge")
+        decoded_predictions, decoded_labels = postprocess_text(
+            predictions, targets)
+
+        result = metric.compute(predictions=decoded_predictions,
+                                references=decoded_labels, use_stemmer=True)
+        result = {k: round(v * 100, 4) for k, v in result.items()}
+        prediction_lens = [np.count_nonzero(
+            pred != self.tokenizer.pad_token_id) for pred in predictions]
+        result["gen_len"] = np.mean(prediction_lens)
+        return result
+
+    def compute_metrics_acc(self, eval_predictions):
+        """
+        Accuracy for answer inference
+        """
+
+        predictions, targets = extract_predictions_and_targets(eval_predictions, self.args, self.tokenizer)
+        correct = 0
+        assert len(predictions) == len(targets)
+        for idx, pred in enumerate(predictions):
+            reference = targets[idx]
+            reference = extract_ans(reference)
+            extract_pred = extract_ans(pred)
+            best_option = extract_pred
+            if reference == best_option:
+                correct += 1
+        return {'Accuracy': 1.0 * correct / len(targets)}
