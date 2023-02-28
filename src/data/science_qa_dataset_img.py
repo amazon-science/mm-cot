@@ -13,6 +13,7 @@ img_shape = {
     "detr": (100, 256),
 }
 
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 class ScienceQADatasetImg(Dataset):
     """
@@ -50,14 +51,17 @@ class ScienceQADatasetImg(Dataset):
         self.data = {qid: problems[qid] for qid in qids}
         self.source_len = source_len
         self.summ_len = target_len
-        self.target_text = []
-        self.source_text = []
-        self.image_ids = []
+
+        self.source_ids = torch.tensor([]).to(device)
+        self.source_masks = torch.tensor([]).to(device)
+        self.target_ids = torch.tensor([]).to(device)
+        self.image_ids = torch.tensor([]).to(device)
+
         if test_le is not None:
             test_le_data = json.load(open(test_le))["preds"]
         else:
             test_le_data = None
-        idx = 0
+
         for qid in self.data:
             if test_le_data is not None:
                 curr_le_data = test_le_data[idx]
@@ -66,56 +70,57 @@ class ScienceQADatasetImg(Dataset):
                 curr_le_data = None
             prompt, target = build_train_pair(
                 problems, qid, args, curr_le_data)
-            self.target_text.append(target)
-            self.source_text.append(prompt)
+
+            # SOURCE
+            source = self.process_data(prompt, self.source_len)
+            source_id = source["input_ids"].squeeze().to(device)
+            source_mask = source["attention_mask"].squeeze().to(device)
+
+            # TARGET
+            target = self.process_data(target, self.summ_len)
+            target = target["input_ids"].squeeze().to(device)
+
             if str(qid) in name_maps:
                 i_vectors = image_features[int(name_maps[str(qid)])]
-                self.image_ids.append(i_vectors)
             else:
                 shape = img_shape[args.img_type]
-                self.image_ids.append(np.zeros(shape))
+                i_vectors = np.zeros(shape)
+            i_vectors = torch.tensor(i_vectors).squeeze().to(device)
+
+            self.source_ids = torch.cat(
+                (self.source_ids, source_id.unsqueeze(0)), 0)
+            self.source_masks = torch.cat(
+                (self.source_masks, source_mask.unsqueeze(0)), 0)
+            self.target_ids = torch.cat(
+                (self.target_ids, target.unsqueeze(0)), 0)
+            self.image_ids = torch.cat(
+                (self.image_ids, i_vectors.unsqueeze(0)), 0)
 
     def __len__(self):
         """returns the length of dataframe"""
-
-        return len(self.target_text)
+        return len(self.target_ids)
 
     def __getitem__(self, index):
         """return the input ids, attention masks and target ids"""
 
-        source_text = str(self.source_text[index])
-        target_text = str(self.target_text[index])
-        image_ids = self.image_ids[index]
-
-        # cleaning data so as to ensure data is in string type
-        source_text = " ".join(source_text.split())
-        target_text = " ".join(target_text.split())
-
-        source = self.tokenizer.batch_encode_plus(
-            [source_text],
-            max_length=self.source_len,
-            pad_to_max_length=True,
-            truncation=True,
-            padding="max_length",
-            return_tensors="pt",
-        )
-        target = self.tokenizer.batch_encode_plus(
-            [target_text],
-            max_length=self.summ_len,
-            pad_to_max_length=True,
-            truncation=True,
-            padding="max_length",
-            return_tensors="pt",
-        )
-        source_ids = source["input_ids"].squeeze()
-        source_mask = source["attention_mask"].squeeze()
-        target_ids = target["input_ids"].squeeze().tolist()
-
-        image_ids = torch.tensor(image_ids).squeeze()
-
         return {
-            "input_ids": source_ids,
-            "attention_mask": source_mask,
-            "image_ids": image_ids,
-            "labels": target_ids,
+            "input_ids": self.source_ids[index].to(torch.long),
+            "attention_mask": self.source_masks[index].to(torch.long),
+            "image_ids": self.image_ids[index].to(torch.float),
+            "labels": self.target_ids[index].to(torch.long).tolist(),
         }
+
+    def process_data(
+        self,
+        text,
+        max_length
+    ):
+        text = " ".join(str(text).split())
+        return self.tokenizer.batch_encode_plus(
+            [text],
+            max_length=max_length,
+            pad_to_max_length=True,
+            truncation=True,
+            padding="max_length",
+            return_tensors="pt",
+        )
