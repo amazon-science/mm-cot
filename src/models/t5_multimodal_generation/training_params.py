@@ -32,13 +32,13 @@ def get_training_data(args, dataframe, tokenizer):
         eval_set = ScienceQADatasetImg(
             problems,
             val_qids,
-            name_maps,
             tokenizer,
             args.input_len,
             args.output_len,
             args,
-            image_features,
-            args.eval_le,
+            image_features=image_features,
+            test_le=args.eval_le,
+            name_maps=name_maps
         )
         test_set = None
     else:

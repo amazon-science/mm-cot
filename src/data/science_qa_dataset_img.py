@@ -29,8 +29,8 @@ class ScienceQADatasetImg(ScienceQADatasetStd):
             source_len,
             target_len,
             args,
-            test_le=None,
             image_features=None,
+            test_le=None,
             name_maps=None,
     ):
         """

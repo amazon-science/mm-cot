@@ -7,13 +7,12 @@ import numpy as np
 from transformers import DataCollatorForSeq2Seq, Seq2SeqTrainer
 from transformers import T5Tokenizer
 
-from src.data.science_qa_dataset_img import ScienceQADatasetIterator
+from src.data.science_qa_dataset_iterator import ScienceQADatasetIterator
 from src.models.evaluation.evaluation import get_scores
 from src.models.t5_multimodal_generation.training_params import get_t5_model, get_training_args
 from src.models.t5_multimodal_generation.utils import extract_predictions_and_targets, extract_ans, \
     postprocess_text
 from src.models.t5_multimodal_generation.utils import make_backup_dir
-from transformers.trainer_utils import EvalLoopOutput
 
 
 class T5ForMultimodalGenerationService:
