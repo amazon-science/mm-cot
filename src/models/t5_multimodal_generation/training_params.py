@@ -29,6 +29,16 @@ def get_training_data(args, dataframe, tokenizer):
         image_features = dataframe['image_features']
 
         train_set = None
+        # train_set = ScienceQADatasetImg(
+        #     problems,
+        #     train_qids,
+        #     tokenizer,
+        #     args.input_len,
+        #     args.output_len,
+        #     args,
+        #     image_features=image_features,
+        #     name_maps=name_maps
+        # )
         eval_set = ScienceQADatasetImg(
             problems,
             val_qids,
@@ -40,6 +50,17 @@ def get_training_data(args, dataframe, tokenizer):
             test_le=args.eval_le,
             name_maps=name_maps
         )
+        # test_set = ScienceQADatasetImg(
+        #     problems,
+        #     test_qids,
+        #     tokenizer,
+        #     args.input_len,
+        #     args.output_len,
+        #     args,
+        #     image_features=image_features,
+        #     test_le=args.test_le,
+        #     name_maps=name_maps
+        # )
         test_set = None
     else:
         train_set = ScienceQADatasetStd(
