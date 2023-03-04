@@ -1,8 +1,14 @@
 
+from typing import Tuple
+
 import pandas as pd
 import torch
-from torch.utils.data import IterableDataset
 from torch import Tensor
+from torch.utils.data import IterableDataset
+from transformers import T5Tokenizer
+
+from src.data.fakeddit.labels import LabelsTypes, get_options_text
+
 # test_le: Probably it is the previously generated rationale, needed to inference the answer (so it will be null when)
 # inferencing the rationale
 
@@ -23,6 +29,10 @@ from torch import Tensor
 # "labels": self.target_ids[index].to(torch.long).tolist(),
 
 DATASET_PATH = 'data/fakeddit/partial/dataset.csv'
+DEFAULT_PROMPT = """Question: What adjective better describes the following fact?
+\n<TEXT>
+\nOptions: <OPTIONS>
+\nSolution:"""
 
 
 def load_data(args):
@@ -38,19 +48,28 @@ class FakedditDataset(IterableDataset):
         self,
         dataframe: pd.DataFrame,
         images_path: str,
-        tokenizer: any,
-        max_length: int = 512
+        tokenizer: T5Tokenizer,
+        max_length: int = 512,
+        labels_type: LabelsTypes = LabelsTypes.TWO_WAY
     ) -> None:
+
+        self.labels_type = labels_type
+        self.dataframe = dataframe
+        self.tokenizer = tokenizer
+        self.max_length = max_length
 
         self.input_ids = torch.tensor([], device=device)
         self.image_ids = torch.tensor([], device=device)
         self.attention_masks = torch.tensor([], devic=device)
         self.labels = torch.tensor([], device=device)
 
-        for row in dataframe.to_dict(orient="records"):
-            _input_ids = self.get_input_ids(row)
+        self._build_dataset()
+
+    def _build_dataset(self) -> None:
+
+        for row in self.dataframe.to_dict(orient="records"):
+            _input_ids, _attention_mask = self.get_input_ids(row)
             _image_ids = self.get_image_ids(row)
-            _attention_mask = self.get_attention_mask(row)
             _labels = self.get_labels(row)
 
             self.input_ids = torch.cat(
@@ -62,17 +81,30 @@ class FakedditDataset(IterableDataset):
             self.labels = torch.cat(
                 (self.labels, _labels.unsqueeze(0)), 0)
 
-    def get_input_ids(self, row: dict) -> Tensor:
-        pass
+    def get_input_ids(self, row: dict) -> Tuple[Tensor, Tensor]:
+
+        raw_text = row["raw_text"]
+        full_text = self._get_question_text(raw_text)
+        processed = self.process_data(full_text, self.source_len)
+
+        input_ids = processed["input_ids"].squeeze().to(device)
+        attention_mask = processed["attention_mask"].squeeze().to(device)
+
+        return input_ids, attention_mask
+
+    def _get_question_text(self, raw_text: str) -> str:
+        options_text = get_options_text(self.labels_type)
+
+        question_text = DEFAULT_PROMPT.replace("<TEXT>", raw_text)
+        question_text = DEFAULT_PROMPT.replace("<OPTIONS>", options_text)
+
+        return question_text
 
     def get_image_ids(self, row: dict) -> Tensor:
-        pass
-
-    def get_attention_mask(self, row: dict) -> Tensor:
-        pass
+        return torch.tensor([], device=device)
 
     def get_labels(self, row: dict) -> Tensor:
-        pass
+        return torch.tensor([], device=device)
 
     def process_data(
             self,
@@ -89,7 +121,6 @@ class FakedditDataset(IterableDataset):
         )
 
     def __getitem__(self, index) -> dict:
-
         return {
             "input_ids": self.input_ids[index].to(torch.long),
             "attention_mask": self.attention_masks[index].to(torch.long),

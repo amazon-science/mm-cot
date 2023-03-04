@@ -5,6 +5,30 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Main Fakeddit",
+            "type": "python",
+            "request": "launch",
+            "program": "${cwd}/src/main_fakeddit.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "--data_root", "data/dataset",
+                "--model", "allenai/unifiedqa-t5-base",
+                "--user", "msg rationale",
+                "--img_type", "detr",
+                "--bs", "8",
+                "--eval_bs", "4",
+                "--eval_acc", "10",
+                "--output_len", "512",
+                "--final_eval",
+                "--prompt_format", "QCM-LE",
+                "--evaluate_dir", "models/rationale",
+                "--data_root", "data/dataset",
+                "--caption_file", "data/dataset/captions.json",
+                "--evaluate_dir", "models/MM-CoT-UnifiedQA-base-Rationale"
+            ]
+        },
+        {
             "name": "Main",
             "type": "python",
             "request": "launch",

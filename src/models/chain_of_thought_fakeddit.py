@@ -3,9 +3,9 @@ import torch
 from transformers import T5Tokenizer
 import random
 from src.models.t5_multimodal_generation.service import T5ForMultimodalGenerationService
-from src.models.t5_multimodal_generation.training_params import get_training_data
-from src.data.data import load_data_std, load_data_img
 from src.constants import PromptFormat
+from src.data.fakeddit.dataset import FakedditDataset
+
 
 class ChainOfThought:
 
@@ -21,8 +21,6 @@ class ChainOfThought:
         self.test_set = None
         self.t5_model = None
         self.tokenizer = None
-        
-        return self
 
     def _set_random_seed(self):
         random.seed(self.args.seed)
@@ -30,28 +28,30 @@ class ChainOfThought:
         np.random.seed(self.args.seed)
         torch.backends.cudnn.deterministic = True
 
-    def load_data(self):
-        if self.args.img_type is not None:
-            problems, qids, name_maps, image_features = load_data_img(
-                self.args)  # probelms, test question ids, shot example ids
-            dataframe = {'problems': problems, 'qids': qids,
-                         'name_maps': name_maps, 'image_features': image_features}
-        else:
-            # probelms, test question ids, shot example ids
-            problems, qids = load_data_std(self.args)
-            dataframe = {'problems': problems, 'qids': qids}
+    def set_tokenizer(self, tokenizer: T5Tokenizer):
+        self.tokenizer = tokenizer
+        return self
 
-        self.dataframe = dataframe
+    def set_train_set(self, train_set: FakedditDataset):
+        self.train_set = train_set
+        return self
+
+    def set_validation_set(self, validation_set: FakedditDataset):
+        self.validation_set = validation_set
+        return self
+
+    def set_test_set(self, test_set: FakedditDataset):
+        self.test_set = test_set
+        return self
 
     def load_model(self):
-        self.tokenizer = T5Tokenizer.from_pretrained(
-            pretrained_model_name_or_path=self.args.model)
+        if not self.tokenizer:
+            raise AttributeError(
+                "A tokenizer is required to load the model. Use set_tokenizer")
         self.t5_model = T5ForMultimodalGenerationService(self.dataframe,
                                                          self.args, self.tokenizer)
 
-        self.train_set, self.eval_set, self.test_set = get_training_data(
-            self.args, self.dataframe, self.tokenizer)
-
+        # Here we shouldn't need the models
         run_training = self.args.evaluate_dir is None
         if run_training:
             self.t5_model.fit(self.train_set, self.eval_set)

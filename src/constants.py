@@ -1,5 +1,13 @@
 from enum import Enum
 
+import os
+from pathlib import Path
+
+ROOT_PATH = Path(__file__).parent.parent
+SRC_PATH = os.path.join(ROOT_PATH, "src")
+DATA_PATH = os.path.join(ROOT_PATH, "data")
+FAKEDDIT_DATASET_PATH = os.path.join(DATA_PATH, "fakeddit", "partial", "dataset.csv")
+
 
 class PromptFormat(Enum):
     """
