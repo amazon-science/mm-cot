@@ -40,11 +40,13 @@ if __name__ == '__main__':
         pretrained_model_name_or_path=args.model)
     test_set = FakedditDataset(
         dataframe=dataframe,
-        tokenizer=tokenizer
+        tokenizer=tokenizer,
+        max_length=args.output_len
     )
 
     chain_of_thought = ChainOfThought(args) \
         .set_tokenizer(tokenizer) \
-        .set_test_set(test_set) \
-        .load_model()
+        .set_eval_set(test_set) \
+        .load_model() \
+        .evaluate()
     # chain_of_thought.evaluate()

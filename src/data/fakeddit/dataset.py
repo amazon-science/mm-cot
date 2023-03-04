@@ -47,10 +47,10 @@ class FakedditDataset(IterableDataset):
     def __init__(
         self,
         dataframe: pd.DataFrame,
-        images_path: str,
         tokenizer: T5Tokenizer,
         max_length: int = 512,
-        labels_type: LabelsTypes = LabelsTypes.TWO_WAY
+        labels_type: LabelsTypes = LabelsTypes.TWO_WAY,
+        images_path: str = None
     ) -> None:
 
         self.labels_type = labels_type
@@ -60,14 +60,14 @@ class FakedditDataset(IterableDataset):
 
         self.input_ids = torch.tensor([], device=device)
         self.image_ids = torch.tensor([], device=device)
-        self.attention_masks = torch.tensor([], devic=device)
+        self.attention_masks = torch.tensor([], device=device)
         self.labels = torch.tensor([], device=device)
 
         self._build_dataset()
 
     def _build_dataset(self) -> None:
 
-        for row in self.dataframe.to_dict(orient="records"):
+        for row in self.dataframe.to_dict(orient="records")[:10]:
             _input_ids, _attention_mask = self.get_input_ids(row)
             _image_ids = self.get_image_ids(row)
             _labels = self.get_labels(row)
@@ -83,28 +83,28 @@ class FakedditDataset(IterableDataset):
 
     def get_input_ids(self, row: dict) -> Tuple[Tensor, Tensor]:
 
-        raw_text = row["raw_text"]
-        full_text = self._get_question_text(raw_text)
-        processed = self.process_data(full_text, self.source_len)
+        clean_title = row["clean_title"]
+        full_text = self._get_question_text(clean_title)
+        processed = self.process_data(full_text)
 
         input_ids = processed["input_ids"].squeeze().to(device)
         attention_mask = processed["attention_mask"].squeeze().to(device)
 
         return input_ids, attention_mask
 
-    def _get_question_text(self, raw_text: str) -> str:
+    def _get_question_text(self, clean_title: str) -> str:
         options_text = get_options_text(self.labels_type)
 
-        question_text = DEFAULT_PROMPT.replace("<TEXT>", raw_text)
-        question_text = DEFAULT_PROMPT.replace("<OPTIONS>", options_text)
+        question_text = DEFAULT_PROMPT.replace("<TEXT>", clean_title)
+        question_text = question_text.replace("<OPTIONS>", options_text)
 
         return question_text
 
     def get_image_ids(self, row: dict) -> Tensor:
-        return torch.tensor([], device=device)
+        return torch.zeros(256, 768, device=device)
 
     def get_labels(self, row: dict) -> Tensor:
-        return torch.tensor([], device=device)
+        return torch.zeros(256, device=device)
 
     def process_data(
             self,
@@ -120,9 +120,14 @@ class FakedditDataset(IterableDataset):
             return_tensors="pt",
         )
 
+    def __len__(self):
+        """returns the length of dataframe"""
+        return len(self.input_ids)
+
     def __getitem__(self, index) -> dict:
         return {
             "input_ids": self.input_ids[index].to(torch.long),
             "attention_mask": self.attention_masks[index].to(torch.long),
+            "image_ids": self.image_ids[index].to(torch.float),
             "labels": self.labels[index].to(torch.long).tolist(),
         }

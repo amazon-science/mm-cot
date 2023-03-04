@@ -31,9 +31,9 @@ class SixWayLabels(Enum):
 
 
 def get_options_text(labels_type: LabelsTypes) -> str:
-    if isinstance(labels_type, LabelsTypes.TWO_WAY):
+    if labels_type == LabelsTypes.TWO_WAY:
         return "(A) True (B) False"
-    if isinstance(labels_type, LabelsTypes.THREE_WAY):
+    if labels_type == LabelsTypes.THREE_WAY:
         return "(A) True (B) Fake with true text (C) Fake with false text"
-    if isinstance(labels_type, LabelsTypes.SIX_WAY):
+    if labels_type == LabelsTypes.SIX_WAY:
         return "(A) True (B) Satire (C) False connection (D) Imposter content (E) Manipulated content (F) Misleading content"

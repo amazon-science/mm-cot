@@ -17,8 +17,12 @@ class ChainOfThought:
         self._set_random_seed()
         self.dataframe = None
         self.train_set = None
+        self.validation_set = None
+
+        # We keep eval set for compatibility reasons
         self.eval_set = None
         self.test_set = None
+        
         self.t5_model = None
         self.tokenizer = None
 
@@ -40,6 +44,10 @@ class ChainOfThought:
         self.validation_set = validation_set
         return self
 
+    def set_eval_set(self, eval_set: FakedditDataset):
+        self.eval_set = eval_set
+        return self
+
     def set_test_set(self, test_set: FakedditDataset):
         self.test_set = test_set
         return self
@@ -58,6 +66,8 @@ class ChainOfThought:
         else:
             self.t5_model.build_seq2seq_base_trainer(
                 self.train_set, self.eval_set)
+            
+        return self
 
     def evaluate(self):
 

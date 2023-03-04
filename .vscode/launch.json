@@ -15,7 +15,7 @@
                 "--data_root", "data/dataset",
                 "--model", "allenai/unifiedqa-t5-base",
                 "--user", "msg rationale",
-                "--img_type", "detr",
+                //"--img_type", "detr",
                 "--bs", "8",
                 "--eval_bs", "4",
                 "--eval_acc", "10",
