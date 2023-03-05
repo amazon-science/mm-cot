@@ -2,6 +2,7 @@ import json
 import os
 
 import numpy as np
+from zipfile import ZipFile
 
 
 def load_data_std(args):
@@ -52,3 +53,14 @@ def get_qids(args, captions, pid_splits, problems):
     qids = {'train': train_qids, 'val': val_qids, 'test': test_qids}
 
     return qids
+
+
+def unzip_folder(folder_name: str = None, destination_path: str = "./"):
+    if not folder_name:
+        raise NotADirectoryError
+
+    if not os.path.exists(destination_path):
+        os.mkdir(destination_path)
+
+    with ZipFile(f"{folder_name}.zip", 'r') as zip_obj:
+        zip_obj.extractall(path=destination_path)

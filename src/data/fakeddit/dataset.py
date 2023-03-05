@@ -3,9 +3,12 @@ from typing import Tuple
 
 import pandas as pd
 import torch
+from PIL import Image
 from torch import Tensor
 from torch.utils.data import IterableDataset
+from torchvision import transforms
 from transformers import T5Tokenizer
+from src import constants
 
 from src.data.fakeddit.labels import LabelsTypes, get_options_text
 
@@ -101,7 +104,12 @@ class FakedditDataset(IterableDataset):
         return question_text
 
     def get_image_ids(self, row: dict) -> Tensor:
-        return torch.zeros(256, 768, device=device)
+        image_id = row["id"]
+        image_obj = Image.open(f"{constants.FAKEDDIT_IMG_DATASET_PATH}/{image_id}.jpg")
+        img_to_tensor_transformer = transforms.Compose([transforms.PILToTensor()])
+        image_tensor = img_to_tensor_transformer(image_obj)
+
+        return image_tensor.to(device=device)
 
     def get_labels(self, row: dict) -> Tensor:
         return torch.zeros(256, device=device)

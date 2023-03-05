@@ -21,8 +21,6 @@ class ChainOfThought:
         self.test_set = None
         self.t5_model = None
         self.tokenizer = None
-        
-        return self
 
     def _set_random_seed(self):
         random.seed(self.args.seed)
