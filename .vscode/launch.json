@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${cwd}/src/main_fakeddit.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
             "args": [
                 "--data_root", "data/dataset",
                 "--model", "allenai/unifiedqa-t5-base",
@@ -34,7 +34,7 @@
             "request": "launch",
             "program": "${cwd}/src/main.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
             "args": [
                 "--data_root", "data/dataset",
                 "--model", "allenai/unifiedqa-t5-base",
