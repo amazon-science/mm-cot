@@ -8,6 +8,8 @@ SRC_PATH = os.path.join(ROOT_PATH, "src")
 DATA_PATH = os.path.join(ROOT_PATH, "data")
 FAKEDDIT_DATASET_PATH = os.path.join(DATA_PATH, "fakeddit", "partial", "dataset.csv")
 FAKEDDIT_IMG_DATASET_PATH = os.path.join(DATA_PATH, "fakeddit", "images")
+FAKEDDIT_VISION_FEATURES = os.path.join(DATA_PATH, "fakeddit", "partial", "vision_features", "image_features.npy")
+FAKEDDIT_VISION_FEATURES_CHECKPOINT = os.path.join(DATA_PATH, "checkpoint.txt")
 
 class PromptFormat(Enum):
     """
