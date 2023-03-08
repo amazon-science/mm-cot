@@ -1,0 +1,26 @@
+{
+    "preds": [
+        "Solution: An happenss describes the following fact:outs is: Ana) true,f) describesse (: The",
+        "Solution: An makess describes the following fact:light sonata by ludwig van barktoven is:A) Fullf) isse (: The",
+        "Solution: A makess describes the following fact: america great again istrump is:a) truef) isse (: If",
+        "Solution: An makess describes the following fact? doctor office has extra wide seats.:a) truef) isse (: A",
+        "Solution: How makess describes the following fact:oblong finger grapes didn' know these existed till today.:A) adjective,f) Truese (:",
+        "Solution: A happenss describes the following fact: mine is very very sad that it was dropped on land from a helicopter instead of being used properly.:a) true,f) Truese (: A",
+        "Solution: An adjective describe describes the following fact?truck is: Thetru) true,f) describesse (: The",
+        "Solution: A makess describes the following fact:stray dogs save abandoned newborn girl.:a) true;f) isse (:",
+        "Solution: An happenss describes the following fact:tese in the breeze is: Ana) true,f) isse (: Mal",
+        "Solution: An makess describes the following fact:ukrainian protester is: Anf) truef) isse (: If"
+    ],
+    "labels": [
+        "Question: What adjective better describes the following fact? cutouts Options: (A) True (B) False Solution:",
+        "Question: What adjective better describes the following fact? moonlight sonata by ludwig van barktoven Options: (A) True (B) False Solution:",
+        "Question: What adjective better describes the following fact? make america great again protrump Options: (A) True (B) False Solution:",
+        "Question: What adjective better describes the following fact? this doctors office has extra wide seats Options: (A) True (B) False Solution:",
+        "Question: What adjective better describes the following fact? oblong finger grapes didnt know these existed till today Options: (A) True (B) False Solution:",
+        "Question: What adjective better describes the following fact? naval mine is very very sad that it was dropped on land from a helicopter instead of being used properly Options: (A) True (B) False Solution:",
+        "Question: What adjective better describes the following fact? starstruck Options: (A) True (B) False Solution:",
+        "Question: What adjective better describes the following fact? stray dogs save abandoned newborn girl Options: (A) True (B) False Solution:",
+        "Question: What adjective better describes the following fact? maltese in the breeze Options: (A) True (B) False Solution:",
+        "Question: What adjective better describes the following fact? ukrainian protester Options: (A) True (B) False Solution:"
+    ]
+}

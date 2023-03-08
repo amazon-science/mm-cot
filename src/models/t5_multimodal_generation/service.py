@@ -7,6 +7,7 @@ import numpy as np
 from transformers import DataCollatorForSeq2Seq, Seq2SeqTrainer
 from transformers import T5Tokenizer
 
+from datetime import datetime
 from src.data.science_qa_dataset_iterator import ScienceQADatasetIterator
 from src.models.evaluation.evaluation import get_scores
 from src.models.t5_multimodal_generation.training_params import get_t5_model, get_training_args
@@ -40,6 +41,7 @@ class T5ForMultimodalGenerationService:
         print("[Data]: Reading data...\n")
 
         model = get_t5_model(self.args, self.tokenizer, self.save_dir)
+        self.model = model
 
         data_collator = DataCollatorForSeq2Seq(self.tokenizer)
         print("Model parameters: ", model.num_parameters())
@@ -120,24 +122,34 @@ class T5ForMultimodalGenerationService:
 
         output_data = {
             "preds": [],
-            "labels": []
+            #"labels": []
         }
 
-        for batch in ScienceQADatasetIterator(dataset=eval_set, batch_size=self.args.batch_size_in_memory):
-            predict_results = self.seq2seq_trainer.predict(
-                test_dataset=batch, max_length=self.args.output_len)
+        for batch in ScienceQADatasetIterator(dataset=eval_set, batch_size=1):
+            self.model.config.max_length = 512
+            self.model.config.repetition_penalty = 10.0
+            self.model.config.length_penalty = 10.0
+            out = self.model.generate(
+                batch[0]['input_ids'][None, :], 
+                image_ids=batch[0]['image_ids'][None, :]#, 
+                #generation_config={"max_length": 512}
+            )
+            # predict_results = self.seq2seq_trainer.predict(test_dataset=batch, max_length=self.args.output_len)
 
-            if self.seq2seq_trainer.is_world_process_zero():
-                predictions, targets = extract_predictions_and_targets(
-                    predict_results, self.args, self.tokenizer)
-                predictions = [pred.strip() for pred in predictions]
+            #if self.seq2seq_trainer.is_world_process_zero():
+            predictions = self.tokenizer.batch_decode(
+                out, skip_special_tokens=True, clean_up_tokenization_spaces=True
+            )
+            # predictions, targets = extract_predictions_and_targets(
+            #    predict_results, self.args, self.tokenizer)
+            predictions = [pred.strip() for pred in predictions]
 
-                output_data["preds"].extend(predictions)
-                output_data["labels"].extend(targets)
+            output_data["preds"].extend(predictions)
+            # output_data["labels"].extend(targets)
 
         if self.seq2seq_trainer.is_world_process_zero():
             output_prediction_file = os.path.join(
-                self.save_dir, "predictions_ans_eval.json")
+                self.save_dir, f"predictions_ans_eval_{str(datetime.now())}.json")
 
             with open(output_prediction_file, "w") as writer:
                 writer.write(json.dumps(output_data, indent=4))
