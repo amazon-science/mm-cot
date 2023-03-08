@@ -40,7 +40,7 @@ class ScienceQADatasetStd(Dataset):
         """
 
         self.tokenizer = tokenizer
-        self.data = {qid: problems[qid] for qid in qids}
+        self.data = {qid: problems[qid] for qid in qids[:10]}
         self.source_len = source_len
         self.summ_len = target_len
 

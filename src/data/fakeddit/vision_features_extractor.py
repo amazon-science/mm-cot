@@ -12,7 +12,7 @@ model = DetrForObjectDetection.from_pretrained("facebook/detr-resnet-101-dc5")
 image_features = []
 
 try:
-    image_features = np.load(constants.FAKEDDIT_VISION_FEATURES, allow_pickle=True).tolist()
+    image_features = np.load(constants.FAKEDDIT_VISION_FEATURES_PATH, allow_pickle=True).tolist()
 except FileNotFoundError:
     pass
 

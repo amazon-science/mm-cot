@@ -77,5 +77,3 @@ class ScienceQADatasetImg(ScienceQADatasetStd):
             "image_ids": self.image_ids[index].to(torch.float),
             "labels": self.target_ids[index].to(torch.long).tolist(),
         }
-
-

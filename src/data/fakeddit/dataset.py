@@ -1,6 +1,7 @@
 
 from typing import Tuple
 
+import numpy as np
 import pandas as pd
 import torch
 from PIL import Image
@@ -8,8 +9,8 @@ from torch import Tensor
 from torch.utils.data import IterableDataset
 from torchvision import transforms
 from transformers import T5Tokenizer
-from src import constants
 
+from src import constants
 from src.data.fakeddit.labels import LabelsTypes, get_options_text
 
 # test_le: Probably it is the previously generated rationale, needed to inference the answer (so it will be null when)
@@ -31,16 +32,11 @@ from src.data.fakeddit.labels import LabelsTypes, get_options_text
 # "image_ids": self.image_ids[index].to(torch.float),
 # "labels": self.target_ids[index].to(torch.long).tolist(),
 
+#  \nContext: A news is a piece of information regardings fact happening in the world. A news can also be crafted and manipulated with malicious objectives.
 DATASET_PATH = 'data/fakeddit/partial/dataset.csv'
-DEFAULT_PROMPT = """Question: What adjective better describes the following fact?
-\n<TEXT>
-\nOptions: <OPTIONS>
-\nSolution:"""
+DEFAULT_PROMPT = """Question: How the image relates to the text? \n<TEXT>\nOptions: <OPTIONS>\nSolution:"""
 
-
-def load_data(args):
-    return pd.read_csv(DATASET_PATH)
-
+IMG_SHAPE = (100, 256)
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -52,37 +48,43 @@ class FakedditDataset(IterableDataset):
         dataframe: pd.DataFrame,
         tokenizer: T5Tokenizer,
         max_length: int = 512,
-        labels_type: LabelsTypes = LabelsTypes.TWO_WAY,
-        images_path: str = None
+        vision_features: np.ndarray = None,
+        labels_type: LabelsTypes = LabelsTypes.TWO_WAY
     ) -> None:
 
         self.labels_type = labels_type
         self.dataframe = dataframe
         self.tokenizer = tokenizer
         self.max_length = max_length
+        self.vision_features = vision_features
 
         self.input_ids = torch.tensor([], device=device)
-        self.image_ids = torch.tensor([], device=device)
         self.attention_masks = torch.tensor([], device=device)
         self.labels = torch.tensor([], device=device)
+
+        self.image_ids = None
+        if self.vision_features is not None:
+            self.image_ids = torch.tensor([], device=device)
 
         self._build_dataset()
 
     def _build_dataset(self) -> None:
 
-        for row in self.dataframe.to_dict(orient="records")[:10]:
+        for index, row in enumerate(self.dataframe.to_dict(orient="records")[:10]):
             _input_ids, _attention_mask = self.get_input_ids(row)
-            _image_ids = self.get_image_ids(row)
             _labels = self.get_labels(row)
 
             self.input_ids = torch.cat(
                 (self.input_ids, _input_ids.unsqueeze(0)), 0)
-            self.image_ids = torch.cat(
-                (self.image_ids, _image_ids.unsqueeze(0)), 0)
             self.attention_masks = torch.cat(
                 (self.attention_masks, _attention_mask.unsqueeze(0)), 0)
             self.labels = torch.cat(
                 (self.labels, _labels.unsqueeze(0)), 0)
+
+            if self.vision_features is not None:
+                _image_ids = self.get_image_ids(index)
+                self.image_ids = torch.cat(
+                    (self.image_ids, _image_ids.unsqueeze(0)), 0)
 
     def get_input_ids(self, row: dict) -> Tuple[Tensor, Tensor]:
 
@@ -103,16 +105,21 @@ class FakedditDataset(IterableDataset):
 
         return question_text
 
-    def get_image_ids(self, row: dict) -> Tensor:
-        image_id = row["id"]
-        image_obj = Image.open(f"{constants.FAKEDDIT_IMG_DATASET_PATH}/{image_id}.jpg")
-        img_to_tensor_transformer = transforms.Compose([transforms.PILToTensor()])
-        image_tensor = img_to_tensor_transformer(image_obj)
+    def get_image_ids(self, vision_feature_index: int) -> Tensor:
 
-        return image_tensor.to(device=device)
+        image_ids = self.vision_features[vision_feature_index]
+        if not len(image_ids):
+            image_ids = np.zeros(IMG_SHAPE)
+        else:
+            # TODO: remove on the original data
+            image_ids = image_ids[0, :, :]
+
+        return torch.tensor(image_ids).squeeze().to(device)
 
     def get_labels(self, row: dict) -> Tensor:
-        return torch.zeros(256, device=device)
+        labels = self.process_data("<pad>")
+        labels = labels["input_ids"].squeeze().to(device)
+        return labels
 
     def process_data(
             self,
@@ -133,9 +140,17 @@ class FakedditDataset(IterableDataset):
         return len(self.input_ids)
 
     def __getitem__(self, index) -> dict:
-        return {
+
+        item = {
             "input_ids": self.input_ids[index].to(torch.long),
             "attention_mask": self.attention_masks[index].to(torch.long),
-            "image_ids": self.image_ids[index].to(torch.float),
-            "labels": self.labels[index].to(torch.long).tolist(),
+            "labels":  self.labels[index].to(torch.long),
         }
+
+        if self.image_ids is not None:
+            item = {
+                **item,
+                "image_ids": self.image_ids[index].to(torch.float)
+            }
+
+        return item

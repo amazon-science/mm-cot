@@ -70,8 +70,8 @@ class ChainOfThought:
 
         torch.cuda.empty_cache()
 
-        if generate_answer:
-            self.t5_model.evaluate(self.test_set)
-
         if generate_rationale:
             self.t5_model.inference(self.eval_set)
+
+        if generate_answer:
+            self.t5_model.evaluate(self.test_set)

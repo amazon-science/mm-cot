@@ -1,13 +1,14 @@
 import json
 import os
 
+import numpy as np
 import pandas as pd
 from rich import box
 from rich.table import Column, Table
 from transformers import T5Tokenizer
 
-from src.args_parser import parse_args
 from src import constants
+from src.args_parser import parse_args
 from src.data.data import unzip_folder
 from src.data.fakeddit.dataset import FakedditDataset
 from src.models.chain_of_thought_fakeddit import ChainOfThought
@@ -37,13 +38,14 @@ if __name__ == '__main__':
         os.mkdir(args.output_dir)
 
     dataframe = pd.read_csv(constants.FAKEDDIT_DATASET_PATH)
-    unzip_folder(folder_name=constants.FAKEDDIT_IMG_DATASET_PATH, destination_path=constants.FAKEDDIT_IMG_DATASET_PATH)
+    vision_features = np.load(constants.FAKEDDIT_VISION_FEATURES_PATH, allow_pickle=True)
 
     tokenizer = T5Tokenizer.from_pretrained(
         pretrained_model_name_or_path=args.model)
     test_set = FakedditDataset(
         dataframe=dataframe,
         tokenizer=tokenizer,
+        vision_features=vision_features,
         max_length=args.output_len
     )
 
