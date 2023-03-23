@@ -23,7 +23,9 @@ Download the dataset from the following repository:
 https://github.com/lupantech/ScienceQA/tree/main/data
 ```
 
-Download the extracted vision features from [vision_features](https://drive.google.com/file/d/13B0hc_F_45-UlqPLKSgRz-ALtFQ8kIJr/view?usp=share_link) and unzip the files under `vision_features`
+Download the extracted vision features (detr, resnet, clip) from [vision_features](https://drive.google.com/file/d/13B0hc_F_45-UlqPLKSgRz-ALtFQ8kIJr/view?usp=share_link) and unzip the files under `vision_features`
+
+Or use the ViT features (better performance) downloaded from https://huggingface.co/cooelf/vision_features/blob/main/vit.npy
 
 ## Extract Features (optional)
 Download the image files from [Google Drive](https://drive.google.com/drive/folders/1w8imCXWYn2LxajmGeGH_g5DaL2rabHev?usp=sharing) and unzip all the images (train, dev, test) in the same folder (). The structure should be:
