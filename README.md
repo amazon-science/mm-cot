@@ -110,6 +110,6 @@ This project is licensed under the Apache-2.0 License.
 
 ## Acknowledgement
 
-Part of our codes are adapted from [ScienceQA](https://github.com/lupantech/ScienceQA) and [Transformers](https://github.com/huggingface/transformers).
+Part of our codes are adapted from [ScienceQA](https://github.com/lupantech/ScienceQA), [Transformers](https://github.com/huggingface/transformers), [pytorch-image-models](https://github.com/huggingface/pytorch-image-models).
 
 We thank [Pan Lu](https://lupantech.github.io/) for providing parameter size for ScienceQA baselines.

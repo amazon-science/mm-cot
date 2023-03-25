@@ -24,11 +24,7 @@ def extract_features(img_type, input_image):
         with torch.no_grad():
             img = Image.open(input_image).convert("RGB")
             input = transform(img).unsqueeze(0)
-            out = vit_model.forward_features(input)
-            patch_feature, pooled_feature = out
-            patch_feature = patch_feature.squeeze(0)
-            concate_feature = torch.cat([pooled_feature, patch_feature], dim=0)
-            feature = concate_feature.unsqueeze(0)
+            feature = vit_model.forward_features(input)
         return feature
     
     elif img_type == "detr":
