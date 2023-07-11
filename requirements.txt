@@ -4,7 +4,7 @@ openai==0.23.0
 pandas==1.4.3
 rouge==1.0.1
 sentence-transformers==2.2.2
-transformers==4.21.1
+transformers==4.30.0
 nltk==3.6.6
 evaluate==0.4.0
 rouge==1.0.1
