@@ -22,8 +22,30 @@ Download the dataset from the following repository:
 ```
 https://github.com/lupantech/ScienceQA/tree/main/data
 ```
+The vision features (detr, resnet, clip, vit) are available at https://huggingface.co/cooelf/vision_features/tree/main
 
-Download the extracted vision features from [vision_features](https://drive.google.com/file/d/13B0hc_F_45-UlqPLKSgRz-ALtFQ8kIJr/view?usp=share_link) and unzip the files under `vision_features`
+Alternatively, you may download the extracted vision features (detr, resnet, clip) from [vision_features](https://drive.google.com/file/d/13B0hc_F_45-UlqPLKSgRz-ALtFQ8kIJr/view?usp=share_link) and unzip the files under `vision_features`
+
+## Extract Features (optional)
+Download the image files from [Google Drive](https://drive.google.com/drive/folders/1w8imCXWYn2LxajmGeGH_g5DaL2rabHev?usp=sharing) and unzip all the images (train, dev, test) in the same folder (). The structure should be:
+
+```
+images
+├── 1
+│   └── image.png
+├── 2
+│   └── image.png
+├── 3
+│   └── image.png
+├── 5
+│   └── image.png
+├── 7
+│   └── image.png
+```
+
+Run ```extract_features.py --data_root images --output_dir vision_features --img_type detr```
+
+If you hope to use your own images, please structure those images in the way above, or modify the script ```extract_features.py```.
 
 ## Instructions
 
@@ -88,6 +110,6 @@ This project is licensed under the Apache-2.0 License.
 
 ## Acknowledgement
 
-Part of our codes are adapted from [ScienceQA](https://github.com/lupantech/ScienceQA) and [Transformers](https://github.com/huggingface/transformers).
+Part of our codes are adapted from [ScienceQA](https://github.com/lupantech/ScienceQA), [Transformers](https://github.com/huggingface/transformers), [pytorch-image-models](https://github.com/huggingface/pytorch-image-models).
 
 We thank [Pan Lu](https://lupantech.github.io/) for providing parameter size for ScienceQA baselines.

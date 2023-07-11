@@ -10,6 +10,7 @@ img_shape = {
     "resnet": (512, 2048),
     "clip": (49, 2048),
     "detr": (100, 256),
+     "vit": (577, 768),
 }
 
 def load_data_std(args):
@@ -45,6 +46,8 @@ def load_data_img(args):
         image_features = np.load('vision_features/clip.npy')
     elif args.img_type == "detr":
         image_features = np.load('vision_features/detr.npy')
+    elif args.img_type == "vit":
+        image_features = np.load('vision_features/vit.npy')
     else:
         image_features = np.load('vision_features/detr.npy')
     print("img_features size: ", image_features.shape)
