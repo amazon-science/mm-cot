@@ -21,9 +21,9 @@ def load_data_std(args):
     for qid in problems:
         problems[qid]['caption'] = captions[qid] if qid in captions else ""
 
-    train_qids = pid_splits['%s' % (args.train_split)]
-    val_qids = pid_splits['%s' % (args.val_split)]
-    test_qids = pid_splits['%s' % (args.test_split)]
+    train_qids = pid_splits[f'{args.train_split}']
+    val_qids = pid_splits[f'{args.val_split}']
+    test_qids = pid_splits[f'{args.test_split}']
     print(f"number of train problems: {len(train_qids)}\n")
     print(f"number of val problems: {len(val_qids)}\n")
     print(f"number of test problems: {len(test_qids)}\n")
@@ -55,9 +55,9 @@ def load_data_img(args):
     for qid in problems:
         problems[qid]['caption'] = captions[qid] if qid in captions else ""
 
-    train_qids = pid_splits['%s' % (args.train_split)]
-    val_qids = pid_splits['%s' % (args.val_split)]
-    test_qids = pid_splits['%s' % (args.test_split)]
+    train_qids = pid_splits[f'{args.train_split}']
+    val_qids = pid_splits[f'{args.val_split}']
+    test_qids = pid_splits[f'{args.test_split}']
     print(f"number of train problems: {len(train_qids)}\n")
     print(f"number of val problems: {len(val_qids)}\n")
     print(f"number of test problems: {len(test_qids)}\n")

@@ -18,7 +18,7 @@ def get_acc_with_contion(res_pd, key, values):
     else:
         total_pd = res_pd[res_pd[key] == values]
     correct_pd = total_pd[total_pd['true_false'] == True]
-    acc = "{:.2f}".format(len(correct_pd) / len(total_pd) * 100)
+    acc = f"{len(correct_pd) / len(total_pd) * 100:.2f}"
     return acc
 
 
@@ -86,7 +86,7 @@ def get_scores(result_data, rationale_data, results_reference, data_file):
                 'acc_grade_7_12':
                 get_acc_with_contion(res_pd, 'grade', ['grade7', 'grade8', 'grade9', 'grade10', 'grade11', 'grade12']),
                 'acc_average':
-                "{:.2f}".format(acc_average),
+                f"{acc_average:.2f}",
             },
             "rationale":{
                 'bleu1': bleu1 * 100,
