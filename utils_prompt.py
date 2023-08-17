@@ -203,8 +203,6 @@ def build_train_pair(problems, test_qid, args, curr_le_data=None):
     
     lecture = get_lecture_text(problems[test_qid])
     solution = get_solution_text(problems[test_qid])
-
-    # answer_text = get_origin_answer(problems[test_qid], args.options)
     answer_option = get_answer(problems[test_qid], args.options)
     answer = "(" + answer_option + ")"
     
