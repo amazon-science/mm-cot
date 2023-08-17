@@ -10,7 +10,7 @@ img_shape = {
     "resnet": (512, 2048),
     "clip": (49, 2048),
     "detr": (100, 256),
-     "vit": (577, 768),
+    "vit": (145, 1024),
 }
 
 def load_data_std(args):
@@ -35,7 +35,7 @@ def load_data_img(args):
     problems = json.load(open(os.path.join(args.data_root, 'scienceqa/problems.json')))
     pid_splits = json.load(open(os.path.join(args.data_root, 'scienceqa/pid_splits.json')))
     captions = json.load(open(args.caption_file))["captions"]
-    name_maps = json.load(open('vision_features/name_map.json'))
+    name_maps = json.load(open('data/name_map.json'))
 
     # check
     if args.img_type == "resnet":
@@ -47,7 +47,7 @@ def load_data_img(args):
     elif args.img_type == "detr":
         image_features = np.load('vision_features/detr.npy')
     elif args.img_type == "vit":
-        image_features = np.load('vision_features/vit.npy')
+        image_features = torch.load("vision_features/vit.pth")
     else:
         image_features = np.load('vision_features/detr.npy')
     print("img_features size: ", image_features.shape)

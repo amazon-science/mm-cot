@@ -27,6 +27,11 @@ The vision features (detr, resnet, clip, vit) are available at https://huggingfa
 Alternatively, you may download the extracted vision features (detr, resnet, clip) from [vision_features](https://drive.google.com/file/d/13B0hc_F_45-UlqPLKSgRz-ALtFQ8kIJr/view?usp=share_link) and unzip the files under `vision_features`
 
 ## Extract Features (optional)
+
+The processed vision features for ScienceQA are available at https://huggingface.co/cooelf/vision_features/tree/main. 
+
+The following instructions show how we obtain those features.
+
 Download the image files from [Google Drive](https://drive.google.com/drive/folders/1w8imCXWYn2LxajmGeGH_g5DaL2rabHev?usp=sharing) and unzip all the images (train, dev, test) in the same folder (). The structure should be:
 
 ```
@@ -43,9 +48,25 @@ images
 │   └── image.png
 ```
 
-Run ```extract_features.py --data_root images --output_dir vision_features --img_type detr```
+Run ```extract_features.py --data_root images --output_dir vision_features --img_type vit```
 
 If you hope to use your own images, please structure those images in the way above, or modify the script ```extract_features.py```.
+
+## Extract Captions (optional)
+
+The processed captions for ScienceQA are available at ```data/instruct_captions.json```. 
+
+The following instructions show how we obtain those features.
+
+Intall lavis and prepare Vicuna weights to use InstructBLIP for caption extraction.
+
+https://github.com/salesforce/LAVIS/tree/f982acc73288408bceda2d35471a8fcf55aa04ca/projects/instructblip
+
+Assume that the images are stored in the ```images``` folder. 
+
+```
+python extract_caption.py
+```
 
 ## Instructions
 
@@ -53,44 +74,57 @@ If you hope to use your own images, please structure those images in the way abo
 
 ```
 # rationale generation
-CUDA_VISIBLE_DEVICES=0,1 python main.py \
-    --model allenai/unifiedqa-t5-base \
-    --user_msg rationale --img_type detr \
-    --bs 8 --eval_bs 4 --eval_acc 10 --output_len 512 \
-    --final_eval --prompt_format QCM-LE
+CUDA_VISIBLE_DEVICES=0,1,2,3 python main.py \
+    --data_root data/ScienceQA/data \
+    --caption_file data/instruct_captions.json \
+    --model declare-lab/flan-alpaca-large \
+    --user_msg rationale --img_type vit \
+    --bs 2 --eval_bs 4 --epoch 50 --lr 5e-5 --output_len 512 \
+    --use_caption --use_generate --prompt_format QCM-E \
+    --output_dir experiments
 
 # answer inference
-CUDA_VISIBLE_DEVICES=0,1 python main.py \
-    --model allenai/unifiedqa-t5-base \
-    --user_msg answer --img_type detr \
-    --bs 8 --eval_bs 4 --eval_acc 10 --output_len 64 \
-    --final_eval --prompt_format QCMG-A \
-    --eval_le experiments/rationale_allenai-unifiedqa-t5-base_detr_QCM-LE_lr5e-05_bs16_op512_ep20/predictions_ans_eval.json \
-    --test_le experiments/rationale_allenai-unifiedqa-t5-base_detr_QCM-LE_lr5e-05_bs16_op512_ep20/predictions_ans_test.json
+CUDA_VISIBLE_DEVICES=0,1,2,3 python main_central.py \
+    --data_root data/ScienceQA/data \
+    --caption_file data/instruct_captions.json \
+    --model declare-lab/flan-alpaca-large \
+    --user_msg answer --img_type vit \
+    --bs 4 --eval_bs 8 --epoch 50 --lr 5e-5 --output_len 64 \
+    --use_caption --use_generate --prompt_format QCMG-A \
+    --output_dir experiments \
+    --eval_le experiments/rationale_declare-lab-flan-alpaca-large_vit_QCM-E_lr5e-05_bs8_op512_ep50/predictions_ans_eval.json \
+    --test_le experiments/rationale_declare-lab-flan-alpaca-large_vit_QCM-E_lr5e-05_bs8_op512_ep50/predictions_ans_test.json
+
 ```
 
 ### Inference 
 
-Our trained models are available at [models](https://drive.google.com/file/d/1FtTYOJPHnWnFfCxNC6M3gar4RAX5E21b/view?usp=share_link). To use our trained models, please put the them under the ```models``` folder.
+Our trained models are available at https://huggingface.co/cooelf/mm-cot/tree/main. To use our trained models, please put the them under the ```models``` folder.
 
 ```
 # rationale generation
-CUDA_VISIBLE_DEVICES=0,1 python main.py \
-    --model allenai/unifiedqa-t5-base \
-    --user_msg rationale --img_type detr \
-    --bs 8 --eval_bs 4 --eval_acc 10 --output_len 512 \
-    --final_eval --prompt_format QCM-LE \
-    --evaluate_dir models/MM-CoT-UnifiedQA-base-Rationale
+CUDA_VISIBLE_DEVICES=0,1,2,3 python main.py \
+    --data_root data/ScienceQA/data \
+    --caption_file data/instruct_captions.json \
+    --model declare-lab/flan-alpaca-large \
+    --user_msg rationale --img_type vit \
+    --bs 2 --eval_bs 4  --epoch 50 --lr 5e-5 --output_len 512 \
+    --use_caption --use_generate --prompt_format QCM-E \
+    --output_dir experiments
+    --evaluate_dir models/mm-cot-large-rationale
 
 # answer inference
-CUDA_VISIBLE_DEVICES=0,1 python main.py \
-    --model allenai/unifiedqa-t5-base \
-    --user_msg answer --img_type detr \
-    --bs 8 --eval_bs 4 --eval_acc 10 --output_len 64 \
-    --final_eval --prompt_format QCMG-A \
-    --eval_le models/rationale/predictions_ans_eval.json \
-    --test_le models/rationale/predictions_ans_test.json \
-    --evaluate_dir models/MM-CoT-UnifiedQA-base-Answer
+CUDA_VISIBLE_DEVICES=0,1,2,3 python main_central.py \
+    --data_root data/ScienceQA/data \
+    --caption_file data/instruct_captions.json \
+    --model declare-lab/flan-alpaca-large \
+    --user_msg answer --img_type vit \
+    --bs 4 --eval_bs 8 --epoch 50 --lr 5e-5 --output_len 64  \
+    --use_caption --use_generate --prompt_format QCMG-A \
+    --output_dir experiments \
+    --eval_le experiments/rationale_declare-lab-flan-alpaca-large_vit_QCM-E_lr5e-05_bs8_op512_ep50/predictions_ans_eval.json \
+    --test_le experiments/rationale_declare-lab-flan-alpaca-large_vit_QCM-E_lr5e-05_bs8_op512_ep50/predictions_ans_test.json \
+    --evaluate_dir models/mm-cot-large-answer
 ```
 
 ## Citing MM-CoT
