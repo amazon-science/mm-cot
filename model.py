@@ -481,7 +481,7 @@ class T5ForMultimodalGeneration(T5ForConditionalGeneration):
     # cut decoder_input_ids if past is used
         # transformers 4.30 (requirements.txt) passes the cache as `past_key_values`, not `past`;
         # without this the decoder cache is never used and generation is quadratic in length
-        if past is None:                                                                   
+        if past is None:                                                              
             past = kwargs.get("past_key_values")
         if past is not None:
             decoder_input_ids = decoder_input_ids[:, -1:]
